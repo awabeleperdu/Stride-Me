@@ -1,0 +1,44 @@
+/* ==========================================================
+   THÈME « PRO » — classique et sobre : fond gris perle, cartes blanches fines, bleu marine.
+   Pas d'effets : lisibilité maximale, look « logiciel professionnel ».
+   ========================================================== */
+[data-theme="pro"] {
+  --bg: #F3F5F9;
+  --card: #FFFFFF;
+  --card-border: #E2E7EF;
+  --card-shadow: 0 1px 2px rgba(15, 27, 45, 0.05), 0 1px 1px rgba(15, 27, 45, 0.03);
+  --text: #0F1B2D;
+  --text-muted: #5B6778;
+  --accent: #1F4FD8;
+  --accent-contrast: #FFFFFF;
+  --accent-glow: none;
+  --brand-teal: #1F4FD8;
+  --brand-orange: #D9731A;
+  --danger: #C8323C;
+  --success: #1E8A57;
+  --input-bg: #EEF1F6;
+  --divider: #E2E7EF;
+  color-scheme: light;
+}
+html[data-theme="pro"] { --radius: 10px; --radius-sm: 8px; }
+html[data-theme="pro"] body { font-feature-settings: "tnum"; }
+html[data-theme="pro"] h2 { font-size: 1.35rem; font-weight: 700; letter-spacing: -.01em; }
+html[data-theme="pro"] .topbar { background: #FFFFFF; border-bottom: 1px solid #DCE2EC; }
+html[data-theme="pro"] .tabbar { background: #FFFFFF; border-top: 1px solid #DCE2EC; box-shadow: 0 -2px 10px rgba(15, 27, 45, .04); }
+html[data-theme="pro"] .tab.active { color: var(--accent); }
+html[data-theme="pro"] .tab.active::before { content: ''; position: absolute; top: 0; width: 28px; height: 3px; border-radius: 0 0 3px 3px; background: var(--accent); }
+html[data-theme="pro"] .card, html[data-theme="pro"] .day-card { background: var(--card); border: 1px solid var(--card-border); box-shadow: var(--card-shadow); }
+html[data-theme="pro"] .btn:not(.ghost):not(.danger) { background: var(--accent); color: #fff; box-shadow: none; border-radius: 8px; font-weight: 600; }
+html[data-theme="pro"] .btn.ghost { background: #fff; border-color: #CBD3E0; color: var(--text); }
+html[data-theme="pro"] .btn { border-radius: 8px; }
+html[data-theme="pro"] .input, html[data-theme="pro"] select.input { background: #fff; border: 1px solid #CBD3E0; border-radius: 8px; }
+html[data-theme="pro"] .seg { background: #E8ECF3; border-radius: 10px; }
+html[data-theme="pro"] .seg button[aria-pressed="true"], html[data-theme="pro"] .seg button.on { background: #fff; color: var(--accent); box-shadow: 0 1px 3px rgba(15,27,45,.15); }
+html[data-theme="pro"] .chip.on { background: var(--accent); color: #fff; box-shadow: none; }
+html[data-theme="pro"] .badge.accent { background: #E4EBFB; color: var(--accent); }
+html[data-theme="pro"] .lc-line { filter: none; }
+html[data-theme="pro"] .stp { background: #EEF1F6; border: 1px solid #DCE2EC; }
+html[data-theme="pro"] #rtChip { box-shadow: 0 6px 18px -6px rgba(15,27,45,.25); }
+html[data-theme="pro"] .rt-full { background: #0F1B2D; }
+html[data-theme="pro"] .rt-full.warn { background: #3A1E0A; }
+html[data-theme="pro"] .rt-full.done { background: #0B2A1B; }
