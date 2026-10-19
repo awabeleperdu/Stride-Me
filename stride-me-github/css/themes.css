@@ -1,0 +1,65 @@
+/* ==========================================================
+   THEMES — variables CSS. Un thème = un bloc [data-theme].
+   Pour un white-label : dupliquer un bloc et changer --accent.
+   ========================================================== */
+
+/* A. Classique (clair, style Apple Fitness) */
+:root,
+[data-theme="classic"] {
+  --bg: #F6F8F9;
+  --card: #FFFFFF;
+  --card-border: transparent;
+  --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  --text: #1A1A1A;
+  --text-muted: #6B7280;
+  --accent: #0A8F9C;
+  --brand-teal: #19C9C9;
+  --brand-orange: #F26B4B;
+  --accent-contrast: #FFFFFF;
+  --accent-glow: none;
+  --danger: #E5484D;
+  --success: #30A46C;
+  --input-bg: #F1F3F5;
+  --divider: rgba(0, 0, 0, 0.08);
+  color-scheme: light;
+}
+
+/* B. Dark (propre, SaaS pro) */
+[data-theme="dark"] {
+  --bg: #11161B;
+  --card: #1B222A;
+  --card-border: #29323C;
+  --card-shadow: none;
+  --text: #E0E0E0;
+  --text-muted: #9A9A9A;
+  --accent: #22D3D3;
+  --brand-teal: #22D3D3;
+  --brand-orange: #FF7A59;
+  --accent-contrast: #06232A;
+  --accent-glow: none;
+  --danger: #F87171;
+  --success: #4ADE80;
+  --input-bg: #232C36;
+  --divider: #29323C;
+  color-scheme: dark;
+}
+
+/* C. Salle (néons rouges) */
+[data-theme="gym"] {
+  --bg: #0A0A0A;
+  --card: #141414;
+  --card-border: rgba(255, 0, 0, 0.3);
+  --card-shadow: none;
+  --text: #FFFFFF;
+  --text-muted: #A3A3A3;
+  --accent: #FF1E1E;
+  --accent-contrast: #FFFFFF;
+  --accent-glow: 0 0 15px rgba(255, 30, 30, 0.4);
+  --brand-teal: #FF1E1E;
+  --brand-orange: #FF5C5C;
+  --danger: #FF5C5C;
+  --success: #3DDC84;
+  --input-bg: #1C1C1C;
+  --divider: rgba(255, 0, 0, 0.18);
+  color-scheme: dark;
+}

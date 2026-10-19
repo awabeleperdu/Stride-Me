@@ -1,0 +1,108 @@
+===========================================================================
+ STRIDE ME : CE QU'IL FAUT COLLER DANS FIREBASE
+===========================================================================
+ Firebase n'utilise PAS de SQL. Il n'y a aucune table à créer : les "collections"
+ (séances, exercices, mesures...) se créent toutes seules quand l'appli s'en sert.
+ Il reste UNE chose à coller (bloc 1) + une optionnelle (bloc 2).
+
+---------------------------------------------------------------------------
+ BLOC 1 (obligatoire)
+ Console Firebase > Firestore Database > onglet "Règles"
+ > efface tout > colle ce qui suit > bouton "Publier"
+---------------------------------------------------------------------------
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function isOwner(uid) { return signedIn() && request.auth.uid == uid; }
+    function isAdmin() { return signedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid)); }
+
+    match /admins/{uid} {
+      allow read: if isOwner(uid);
+      allow write: if false;
+    }
+    match /admin_secrets/{uid} {
+      allow read, write: if isOwner(uid) && isAdmin();
+    }
+    match /users/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow create: if isOwner(uid) && !('disabled' in request.resource.data) && !('deletedAt' in request.resource.data);
+      allow update: if (isOwner(uid) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['disabled', 'disabledAt', 'deletedAt']))
+                    || (isAdmin() && request.auth.uid != uid);
+      allow delete: if isAdmin() && request.auth.uid != uid;
+      match /devices/{id} {
+        allow read: if isOwner(uid) || isAdmin();
+        allow create, update: if isOwner(uid);
+        allow delete: if isOwner(uid) || (isAdmin() && request.auth.uid != uid);
+      }
+    }
+    match /schedule_rotation/{uid} {
+      allow read, write: if isOwner(uid);
+      allow delete: if isAdmin() && request.auth.uid != uid;
+    }
+    match /exercises/{id} {
+      allow read: if signedIn() && (resource.data.ownerId == request.auth.uid || isAdmin());
+      allow create: if signedIn() && request.resource.data.ownerId == request.auth.uid;
+      allow update: if signedIn() && resource.data.ownerId == request.auth.uid;
+      allow delete: if signedIn() && (resource.data.ownerId == request.auth.uid || isAdmin());
+    }
+    match /shared_exercises/{id} {
+      allow read: if signedIn();
+      allow create, update, delete: if isAdmin();
+    }
+    match /measurements/{id} {
+      allow read: if signedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if signedIn() && resource.data.userId == request.auth.uid;
+      allow delete: if signedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+    }
+    match /shared_sessions/{code} {
+      allow read: if signedIn();
+      allow create: if signedIn() && request.resource.data.ownerId == request.auth.uid;
+      allow update: if signedIn() && resource.data.ownerId == request.auth.uid && request.resource.data.ownerId == request.auth.uid;
+      allow delete: if signedIn() && (resource.data.ownerId == request.auth.uid || isAdmin());
+    }
+    match /workouts/{id} {
+      allow read: if signedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if signedIn() && resource.data.userId == request.auth.uid;
+      allow delete: if signedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+    }
+  }
+}
+
+---------------------------------------------------------------------------
+ BLOC 2 (optionnel : uniquement si tu actives Storage pour les photos de machines)
+ Console Firebase > Storage > onglet "Règles"
+ > efface tout > colle ce qui suit > "Publier"
+ (Storage demande le plan Blaze. Sans Storage, tout marche sauf l'envoi de photos perso.)
+---------------------------------------------------------------------------
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /exercises/{uid}/{file} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == uid
+                   && request.resource.size < 2 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
+    }
+    match /shared/{file} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null
+                   && request.resource.size < 2 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
+    }
+  }
+}
+
+---------------------------------------------------------------------------
+ ÉTAPE À LA MAIN (une seule fois) : te déclarer administrateur
+---------------------------------------------------------------------------
+ 1. Connecte-toi à ton site avec ton compte.
+ 2. Firebase > Authentication > Utilisateurs > copie ton "UID" (colonne de droite).
+ 3. Firebase > Firestore Database > "Démarrer une collection"
+      ID de la collection : admins
+      ID du document      : (colle ton UID)
+      Champ               : since   (type string)   valeur : 2026
+ 4. Recharge le site : Profil > Espace administrateur.
