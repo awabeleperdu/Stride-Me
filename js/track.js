@@ -1,7 +1,7 @@
 // Suivi d'usage minimal, visible par l'utilisateur dans Profil › Mes appareils et par l'administrateur :
 // dernière activité, nombre d'ouvertures, appareil (navigateur + système). Aucune donnée d'entraînement n'est envoyée ici.
-import { db } from './firebase-config.js';
-import { doc, getDoc, setDoc, increment, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
+import { db, firebaseConfig } from './firebase-config.js';
+import { doc, getDoc, getDocFromServer, setDoc, increment, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
 
 const ID_KEY = 'deviceId';
 
@@ -53,9 +53,35 @@ export async function isBlocked(user) {
   try { return (await getDoc(doc(db, 'users', user.uid))).data()?.disabled === true; } catch { return false; }
 }
 
+/** Lit un document en privilégiant le serveur (évite qu'un vieux cache hors-ligne réponde « n'existe pas »). */
+async function readDoc(ref) {
+  try { return await getDocFromServer(ref); }
+  catch (e) { if (e?.code === 'unavailable' || /offline/i.test(e?.message || '')) return getDoc(ref); throw e; }
+}
+
+/** Administrateur = un document admins/<uid> existe (création manuelle dans la console Firebase). */
 export async function isAdmin(user) {
-  try { return (await getDoc(doc(db, 'admins', user.uid))).exists(); }
-  catch (e) { console.warn(`[admin] lecture de admins/${user.uid} impossible :`, e.code || '', e.message || e); return false; }   // visible dans la console (F12)
+  try { return (await readDoc(doc(db, 'admins', user.uid))).exists(); }
+  catch (e) { console.warn(`[admin] lecture de admins/${user.uid} impossible :`, e.code || '', e.message || e); return false; }
+}
+
+const HINTS = {
+  'permission-denied': 'Les règles Firestore refusent la lecture. Elles ne sont pas publiées ou pas les bonnes : colle le BLOC 1 de FIREBASE-A-COLLER.txt (Firestore > Règles) puis clique Publier.',
+  unavailable: 'Firestore est injoignable depuis ce navigateur (réseau, bloqueur de pub, ou base non créée).',
+  'failed-precondition': 'La base Firestore n\'existe pas encore dans ce projet : crée-la (Firestore Database > Créer une base de données).',
+  'not-found': 'Base ou projet introuvable : vérifie projectId dans js/firebase-config.js.'
+};
+
+/** Diagnostic complet de l'accès administrateur, affichable à l'écran (utile sur téléphone, sans console). */
+export async function adminDiagnostic(user) {
+  const out = { projectId: firebaseConfig.projectId, uid: user.uid, email: user.email || '(aucun)', anonymous: !!user.isAnonymous };
+  try {
+    const s = await readDoc(doc(db, 'admins', user.uid));
+    out.admin = s.exists() ? { state: 'ok' } : { state: 'missing' };
+  } catch (e) { out.admin = { state: 'error', code: e.code || '', message: e.message || String(e), hint: HINTS[e.code] || '' }; }
+  try { await readDoc(doc(db, 'users', user.uid)); out.users = { state: 'ok' }; }
+  catch (e) { out.users = { state: 'error', code: e.code || '', message: e.message || String(e) }; }
+  return out;
 }
 
 /** Temps écoulé en français : « il y a 3 h », « il y a 12 j ». */

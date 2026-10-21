@@ -13,7 +13,7 @@ import { planningView } from './planning.js';
 import { exportCSV } from './export.js';
 import { adminView } from './admin.js';
 import { mountDevices } from './devices.js';
-import { trackUsage, isBlocked, isAdmin } from './track.js';
+import { trackUsage, isBlocked, isAdmin, adminDiagnostic } from './track.js';
 import { applySettings, getSettings, loadRemoteSettings, mountAppearance } from './settings.js';
 import { esc, toast } from './ui.js';
 import { initTimer } from './timer.js';
@@ -30,6 +30,7 @@ async function profileView(root) {
   root.innerHTML = `
     <div class="stack">
       <h2>Profil</h2>
+      <div id="adminLink"></div>
       <form class="card stack" id="metrics">
         <h3>Mesures actuelles</h3>
         <div class="grid-2">
@@ -43,7 +44,6 @@ async function profileView(root) {
       <div class="stack" id="appearance"></div>
 
       <div id="devices"></div>
-      <div id="adminLink"></div>
       <div class="card stack">
         <h3>Données</h3>
         <button class="btn ghost block" id="csv">Exporter l'historique (CSV)</button>
@@ -52,15 +52,34 @@ async function profileView(root) {
         <h3>Compte</h3>
         <p class="muted">${user.isAnonymous ? 'Session anonyme — lie un compte Google pour retrouver tes données ailleurs.' : esc(user.email || '')}</p>
         ${user.isAnonymous ? '<button class="btn block" id="google">Se connecter avec Google</button>' : ''}
-        <small class="muted" style="word-break:break-all;user-select:all">Identifiant (UID) : ${esc(user.uid)}</small>
         <button class="btn ghost block" id="logout">Se déconnecter</button>
       </div>
     </div>`;
 
   mountAppearance(root.querySelector('#appearance'));
   mountDevices(root.querySelector('#devices')).catch(console.warn);
-  isAdmin(user).then((ok) => {
-    if (ok) root.querySelector('#adminLink').innerHTML = '<a class="card adm-link" href="#/admin"><span><b>Espace administrateur</b><small class="muted">Comptes, activité, appareils</small></span><span aria-hidden="true">›</span></a>';
+  const adm = root.querySelector('#adminLink');
+  isAdmin(user).then(async (ok) => {
+    if (ok) { adm.innerHTML = '<a class="card adm-link" href="#/admin"><span><b>Espace administrateur</b><small class="muted">Comptes, activité, appareils</small></span><span aria-hidden="true">›</span></a>'; return; }
+    // Pas détecté comme admin : on affiche pourquoi (lisible sur téléphone, sans console)
+    const d = await adminDiagnostic(user);
+    const line = (ok, t) => `<li>${ok ? '✅' : '❌'} ${esc(t)}</li>`;
+    const a = d.admin, u = d.users;
+    const verdict = a.state === 'ok' ? 'Document admins/UID trouvé : recharge la page (Ctrl+Maj+R).'
+      : a.state === 'missing' ? `Aucun document « admins / ${d.uid} » dans la base du projet ${d.projectId}. Crée-le dans la console Firebase (collection admins, ID du document = cet UID exact, à copier-coller).`
+      : `Lecture refusée ou impossible. ${a.hint || ''}`;
+    const text = `Projet : ${d.projectId}\nUID : ${d.uid}\nE-mail : ${d.email}\nSession anonyme : ${d.anonymous ? 'oui' : 'non'}\nLecture admins/UID : ${a.state}${a.code ? ' (' + a.code + ')' : ''}${a.message ? ' ' + a.message : ''}\nLecture users/UID : ${u.state}${u.code ? ' (' + u.code + ')' : ''}`;
+    adm.innerHTML = `<details class="card stack" open><summary><b>Espace administrateur : non détecté</b></summary>
+      <ul class="muted" style="list-style:none;padding:0;margin:10px 0">
+        ${line(true, `Projet Firebase : ${d.projectId}`)}
+        ${line(true, `Connecté : ${d.email}`)}
+        <li style="word-break:break-all;user-select:all">🔑 UID : <b>${esc(d.uid)}</b></li>
+        ${line(a.state === 'ok', `Document admins/UID : ${a.state === 'ok' ? 'trouvé' : a.state === 'missing' ? 'introuvable' : 'erreur ' + (a.code || '')}`)}
+        ${line(u.state === 'ok', `Lecture de ton profil : ${u.state === 'ok' ? 'ok' : 'erreur ' + (u.code || '')}`)}
+      </ul>
+      <p>${esc(verdict)}</p>
+      <button class="btn ghost block" id="admCopy">Copier ce diagnostic</button></details>`;
+    adm.querySelector('#admCopy').onclick = async () => { try { await navigator.clipboard.writeText(text); toast('Diagnostic copié'); } catch { toast('Copie impossible : fais une capture d\'écran'); } };
   });
 
   root.querySelector('#metrics').addEventListener('submit', async (e) => {
