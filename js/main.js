@@ -13,7 +13,7 @@ import { planningView } from './planning.js';
 import { exportCSV } from './export.js';
 import { adminView } from './admin.js';
 import { mountDevices } from './devices.js';
-import { trackUsage, isBlocked, isAdmin, adminDiagnostic } from './track.js';
+import { trackUsage, isBlocked, isAdmin } from './track.js';
 import { applySettings, getSettings, loadRemoteSettings, mountAppearance } from './settings.js';
 import { esc, toast } from './ui.js';
 import { initTimer } from './timer.js';
@@ -58,28 +58,9 @@ async function profileView(root) {
 
   mountAppearance(root.querySelector('#appearance'));
   mountDevices(root.querySelector('#devices')).catch(console.warn);
-  const adm = root.querySelector('#adminLink');
-  isAdmin(user).then(async (ok) => {
-    if (ok) { adm.innerHTML = '<a class="card adm-link" href="#/admin"><span><b>Espace administrateur</b><small class="muted">Comptes, activité, appareils</small></span><span aria-hidden="true">›</span></a>'; return; }
-    // Pas détecté comme admin : on affiche pourquoi (lisible sur téléphone, sans console)
-    const d = await adminDiagnostic(user);
-    const line = (ok, t) => `<li>${ok ? '✅' : '❌'} ${esc(t)}</li>`;
-    const a = d.admin, u = d.users;
-    const verdict = a.state === 'ok' ? 'Document admins/UID trouvé : recharge la page (Ctrl+Maj+R).'
-      : a.state === 'missing' ? `Aucun document « admins / ${d.uid} » dans la base du projet ${d.projectId}. Crée-le dans la console Firebase (collection admins, ID du document = cet UID exact, à copier-coller).`
-      : `Lecture refusée ou impossible. ${a.hint || ''}`;
-    const text = `Projet : ${d.projectId}\nUID : ${d.uid}\nE-mail : ${d.email}\nSession anonyme : ${d.anonymous ? 'oui' : 'non'}\nLecture admins/UID : ${a.state}${a.code ? ' (' + a.code + ')' : ''}${a.message ? ' ' + a.message : ''}\nLecture users/UID : ${u.state}${u.code ? ' (' + u.code + ')' : ''}`;
-    adm.innerHTML = `<details class="card stack" open><summary><b>Espace administrateur : non détecté</b></summary>
-      <ul class="muted" style="list-style:none;padding:0;margin:10px 0">
-        ${line(true, `Projet Firebase : ${d.projectId}`)}
-        ${line(true, `Connecté : ${d.email}`)}
-        <li style="word-break:break-all;user-select:all">🔑 UID : <b>${esc(d.uid)}</b></li>
-        ${line(a.state === 'ok', `Document admins/UID : ${a.state === 'ok' ? 'trouvé' : a.state === 'missing' ? 'introuvable' : 'erreur ' + (a.code || '')}`)}
-        ${line(u.state === 'ok', `Lecture de ton profil : ${u.state === 'ok' ? 'ok' : 'erreur ' + (u.code || '')}`)}
-      </ul>
-      <p>${esc(verdict)}</p>
-      <button class="btn ghost block" id="admCopy">Copier ce diagnostic</button></details>`;
-    adm.querySelector('#admCopy').onclick = async () => { try { await navigator.clipboard.writeText(text); toast('Diagnostic copié'); } catch { toast('Copie impossible : fais une capture d\'écran'); } };
+  // Lien visible uniquement pour les administrateurs (document admins/<uid>) ; les autres ne voient rien.
+  isAdmin(user).then((ok) => {
+    if (ok) root.querySelector('#adminLink').innerHTML = '<a class="card adm-link" href="#/admin"><span><b>Espace administrateur</b><small class="muted">Comptes, activité, appareils</small></span><span aria-hidden="true">›</span></a>';
   });
 
   root.querySelector('#metrics').addEventListener('submit', async (e) => {
