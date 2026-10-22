@@ -10,6 +10,8 @@ import { startRest, stopRest } from './timer.js';
 import { fetchHistory } from './statistics.js';
 import { loadLibrary } from './session.js';
 import { openExerciseDetail } from './detail.js';
+import { sheet } from './sharecode.js';
+import { openCatalogPicker } from './catalog.js';
 import { buildWarm, lastWarmReps, warmCardHtml, warmClick, warmInput, warmPayload } from './warmup.js';
 
 /* ---------------------------------------------------------
@@ -176,6 +178,7 @@ export function startWorkout(session) {
   saveDraft();
 }
 
+const isCardio = (n) => /^cardio/i.test(String(n || '').trim());
 const fmtShort = (d) => new Date(d + 'T12:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
 const num = (v) => { const n = parseFloat(String(v).replace(',', '.')); return Number.isFinite(n) ? n : 0; };
 const nice = (n) => String(Math.round(n * 100) / 100).replace('.', ',');
@@ -232,7 +235,7 @@ export async function workoutView(root) {
         ${warmCardHtml(state.warm, { esc, firstName: state.exercises[0]?.name, lastReps: state.lastWarm || {} })}
 
         ${state.exercises.map((ex, i) => {
-          const L = state.last?.[ex.name], meta = libOf(ex.name);
+          const L = state.last?.[ex.name], meta = libOf(ex.name), cardio = isCardio(ex.name);
           return `
           <div class="card ex-card-w" data-ex="${i}">
             <div class="ex-head">
@@ -244,23 +247,25 @@ export async function workoutView(root) {
             ${L ? `
               <div class="last-box">
                 <div class="lb-head"><span>Dernière fois · ${esc(fmtShort(L.date))}</span><button type="button" class="lb-use" data-act="usel">Reprendre</button></div>
-                <div class="lb-sets">${L.sets.map((s, j) => `<span class="lb-chip"><i>${j + 1}</i>${nice(s.weight)} kg × ${s.reps}</span>`).join('')}</div>
+                <div class="lb-sets">${L.sets.map((s, j) => `<span class="lb-chip"><i>${j + 1}</i>${cardio ? `${s.reps} min` : `${nice(s.weight)} kg × ${s.reps}`}</span>`).join('')}</div>
               </div>` : '<p class="muted first-time">Première fois sur cet exercice : tes charges seront retenues pour la prochaine séance.</p>'}
             ${ex.sets.map((s, j) => {
               const p = L?.sets[Math.min(j, L.sets.length - 1)];
               return `
               <div class="set-row ${s.done ? 'done' : ''}" data-set="${j}">
                 <span class="num">${j + 1}</span>
-                <div class="stp"><button type="button" class="stp-b" data-step="weight" data-d="-2.5" aria-label="Moins 2,5 kg">−</button>
+                ${cardio ? '' : `<div class="stp"><button type="button" class="stp-b" data-step="weight" data-d="-2.5" aria-label="Moins 2,5 kg">−</button>
                   <label class="stp-in"><input inputmode="decimal" placeholder="${p ? nice(p.weight) : '0'}" value="${esc(s.weight)}" data-f="weight" aria-label="Charge série ${j + 1}"><small>kg</small></label>
-                  <button type="button" class="stp-b" data-step="weight" data-d="2.5" aria-label="Plus 2,5 kg">+</button></div>
-                <div class="stp"><button type="button" class="stp-b" data-step="reps" data-d="-1" aria-label="Moins une répétition">−</button>
-                  <label class="stp-in"><input inputmode="numeric" placeholder="${p ? p.reps : '0'}" value="${esc(s.reps)}" data-f="reps" aria-label="Répétitions série ${j + 1}"><small>reps</small></label>
-                  <button type="button" class="stp-b" data-step="reps" data-d="1" aria-label="Plus une répétition">+</button></div>
+                  <button type="button" class="stp-b" data-step="weight" data-d="2.5" aria-label="Plus 2,5 kg">+</button></div>`}
+                <div class="stp"><button type="button" class="stp-b" data-step="reps" data-d="${cardio ? -5 : -1}" aria-label="${cardio ? 'Moins 5 minutes' : 'Moins une répétition'}">−</button>
+                  <label class="stp-in"><input inputmode="numeric" placeholder="${p ? p.reps : '0'}" value="${esc(s.reps)}" data-f="reps" aria-label="${cardio ? 'Minutes' : 'Répétitions'} série ${j + 1}"><small>${cardio ? 'min' : 'reps'}</small></label>
+                  <button type="button" class="stp-b" data-step="reps" data-d="${cardio ? 5 : 1}" aria-label="${cardio ? 'Plus 5 minutes' : 'Plus une répétition'}">+</button></div>
                 <button class="set-check" aria-label="Valider la série">✓</button>
               </div>`; }).join('')}
             <button class="btn ghost block add-set" style="margin-top:12px">${icon('plus')} Série</button>
           </div>`; }).join('')}
+
+        <button type="button" class="btn ghost block" data-act="add-ex">${icon('plus')} Ajouter un exercice</button>
 
         <div class="card stack">
           <label class="muted" for="feel">Ressenti</label>
@@ -286,6 +291,46 @@ export async function workoutView(root) {
 
   draw();
 
+  /* ---- Ajouter un exercice en cours de séance : bibliothèque / cardio / nom libre, puis « cette séance seulement » ou « toujours » ---- */
+  const addExercise = async (name, scope) => {
+    name = String(name || '').trim();
+    if (!name) return;
+    if (state.exercises.some((x) => x.name.toLowerCase() === name.toLowerCase())) { toast('Déjà dans la séance'); return; }
+    state.exercises.push({ name, plan: null, sets: [{ reps: '', weight: '', done: false }] });
+    try { const lp = await lastPerformances([name]); Object.assign(state.last ||= {}, lp.perf); } catch (e) { console.warn(e); }
+    saveDraft(); draw();
+    root.querySelector(`[data-ex="${state.exercises.length - 1}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (scope === 'always') {
+      try {
+        const rot = await getRotation();
+        const sess = rot.cycle.find((c) => c.id === state.sessionId);
+        if (!sess) { toast('Ajouté à cette séance seulement (séance introuvable dans ton planning)'); return; }
+        if (!sess.exercises.includes(name)) { sess.exercises.push(name); await saveRotation(rot); }
+        toast(`« ${name} » ajouté à la séance et à ton planning`);
+      } catch (e) { console.error(e); toast(`Ajouté pour aujourd'hui seulement : ${e.code || 'erreur d\'enregistrement'}`); }
+    } else toast(`« ${name} » ajouté pour cette séance`);
+  };
+  const askScope = (name) => {
+    const q = sheet('Ajouter pour…', `<p><b>${esc(name)}</b></p>
+      <button type="button" class="btn block" data-s="once">Uniquement cette séance</button>
+      <button type="button" class="btn ghost block" data-s="always">Toujours dans « ${esc(state.sessionName)} »</button>
+      <small class="muted">« Toujours » l'ajoute aussi à ta séance dans le planning, pour les prochaines fois.</small>`);
+    q.body.onclick = (ev) => { const b = ev.target.closest('[data-s]'); if (!b) return; q.close(); addExercise(name, b.dataset.s); };
+  };
+  function addExerciseFlow() {
+    const m = sheet('Ajouter un exercice', `
+      <button type="button" class="btn block" data-a="lib">Choisir dans la bibliothèque</button>
+      <button type="button" class="btn ghost block" data-a="cardio">Ajouter du cardio</button>
+      <button type="button" class="btn ghost block" data-a="free">Écrire le nom d'un exercice</button>`);
+    m.body.onclick = (ev) => {
+      const b = ev.target.closest('[data-a]'); if (!b) return;
+      m.close();
+      if (b.dataset.a === 'lib') openCatalogPicker({ onPick: (en) => askScope(en.n) });
+      else if (b.dataset.a === 'cardio') askScope('Cardio');
+      else { const n = (prompt('Nom de l\'exercice') || '').trim(); if (n) askScope(n.slice(0, 60)); }
+    };
+  }
+
   const setVal = (exIdx, j, f, v) => {
     state.exercises[exIdx].sets[j][f] = v;
     saveDraft();
@@ -294,6 +339,7 @@ export async function workoutView(root) {
   };
 
   root.onclick = (e) => {
+    if (e.target.closest('[data-act="add-ex"]')) { addExerciseFlow(); return; }
     if (e.target.closest('.warm-card')) { warmClick(e, state.warm, { save: saveDraft, redraw: draw, vibrate, lastReps: state.lastWarm || {} }); return; }
     const exEl = e.target.closest('[data-ex]');
     const exIdx = exEl ? Number(exEl.dataset.ex) : null;
