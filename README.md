@@ -14,6 +14,18 @@
 
 Étudiant en informatique (BTS CIEL), je n'ai trouvé aucune appli de musculation qui me plaisait : des pubs partout, des abonnements pour débloquer le minimum, et surtout aucune vraie modularité. Impossible d'avoir mon propre échauffement, de décaler une séance sans tout casser ou de construire mes séances comme je veux. Alors j'ai créé une application sur mesure, pour moi. Elle est en ligne ici : **https://awabeleperdu.github.io/Stride-Me/**
 
+## 🧪 Essayer la démo
+
+Pas besoin de créer un compte : un compte de démonstration est rempli avec **5 mois de suivi** (une centaine de séances, échauffements, courbes de progression, mesures du corps) pour voir l'appli telle qu'elle est après des mois d'utilisation.
+
+| | |
+|---|---|
+| **Site** | https://awabeleperdu.github.io/Stride-Me/ |
+| **E-mail** | `demo@stride-me.app` |
+| **Mot de passe** | `METS_ICI_LE_MOT_DE_PASSE` |
+
+> Compte en **lecture seule** : tu peux tout consulter, mais rien ne peut y être ajouté ni modifié.
+
 ## Un projet vibe codé
 
 Ce projet est **entièrement vibe codé** : je n'ai pas écrit le code à la main, tout est parti de prompts. Je décide de ce que l'appli doit faire, je teste sur mon téléphone, je dis ce qui ne va pas, et on recommence.
