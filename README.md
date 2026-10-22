@@ -22,7 +22,7 @@ Pas besoin de créer un compte : un compte de démonstration est rempli avec **5
 |---|---|
 | **Site** | https://awabeleperdu.github.io/Stride-Me/ |
 | **E-mail** | `demo@stride-me.app` |
-| **Mot de passe** | `METS_ICI_LE_MOT_DE_PASSE` |
+| **Mot de passe** | `stridemedemo` |
 
 > Compte en **lecture seule** : tu peux tout consulter, mais rien ne peut y être ajouté ni modifié.
 
