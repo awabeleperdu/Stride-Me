@@ -43,7 +43,7 @@ export const RESTS = [60, 90, 120, 180];
 
 export const DEFAULTS = {
   theme: 'aurora', font: 'default', size: 100, spacing: 'normal',
-  accent: '', contrast: false, motion: false, splash: true, sound: true, tone: 'beep', rest: 90, vibrate: true, warm: WARM_DEFAULT,
+  accent: '', contrast: false, motion: false, splash: true, sound: true, tone: 'beep', rest: 90, autoRest: true, vibrate: true, warm: WARM_DEFAULT,
   at: 0                       // date de dernière modification (sert à départager local et compte)
 };
 
@@ -65,6 +65,7 @@ function sanitize(o = {}) {
   s.sound = o.sound !== false;
   if (['beep', 'bell', 'gong'].includes(o.tone)) s.tone = o.tone;
   s.vibrate = o.vibrate !== false;
+  s.autoRest = o.autoRest !== false;
   if (RESTS.includes(Number(o.rest))) s.rest = Number(o.rest);
   s.warm = sanitizeWarm(o.warm);
   const at = Number(o.at);
@@ -241,6 +242,10 @@ export function mountAppearance(el) {
           ${RESTS.map((r) => `<button type="button" data-set="rest" data-val="${r}" aria-pressed="false">${r >= 120 ? `${r / 60} min` : `${r} s`}</button>`).join('')}
         </div>
       </div>
+      <label class="switch-row">
+        <span>Lancer le repos automatiquement<small>Le minuteur démarre quand tu valides une série. Désactivé : tu le lances toi-même avec « Lancer le repos maintenant »</small></span>
+        <span class="switch"><input type="checkbox" data-bool="autoRest"><i></i></span>
+      </label>
       <label class="switch-row">
         <span>Sonnerie en fin de repos<small>Un son quand le minuteur se termine</small></span>
         <span class="switch"><input type="checkbox" data-bool="sound"><i></i></span>

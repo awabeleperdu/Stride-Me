@@ -66,6 +66,65 @@ export const PROGRAMS = {
         plan: { Cardio: X(1, '30–45 min', 'Allure modérée', '', 'Tapis de course, vélo elliptique ou rameur') }
       }
     ]
+  },
+  2000: {
+    title: 'Programme sur mesure : Push / Pull / Épaules-Abdos / Legs / Cardio',
+    note: 'Rotation de 5 séances : machines Hammer Strength et Gym80, séance d\'épaules pensée pour la posture, module abdos express (10-12 min).',
+    sessions: [
+      {
+        name: 'Séance 1 · Push : Pectoraux / Triceps',
+        exercises: ['Développé couché', 'Iso-lateral incline press', 'Chest press', 'Pec fly', 'Barre au front', 'Extension poulie au-dessus de la tête', 'Extension triceps corde'],
+        plan: {
+          'Développé couché': X(3, '6–8', 'Lourd · force et masse globale', 'Haltères sur banc plat', 'Barre ou haltères'),
+          'Iso-lateral incline press': X(3, '8–10', 'Haut des pectoraux (remplissage sous les clavicules)', 'Développé incliné aux haltères', 'Machine Hammer Strength'),
+          'Chest press': X(3, '8–10', 'Épaisseur globale · milieu et bas des pectoraux', 'Développé couché guidé', 'Machine Gym80'),
+          'Pec fly': X(3, '10–12', 'Isolation · étirement et finition', 'Écartés aux poulies vis-à-vis', 'Pec deck ou poulies'),
+          'Barre au front': X(3, '6–8', 'Tension mécanique lourde · masse globale des triceps', 'Extension couchée aux haltères', 'Barre EZ sur banc (skull crusher)'),
+          'Extension poulie au-dessus de la tête': X(3, '10–12', 'Étirement · longue portion du triceps', '', 'Poulie haute de dos avec corde'),
+          'Extension triceps corde': X(3, '10–12', 'Isolation et finition · chefs latéral et médial', '', 'Poulie haute avec corde, ouverture des poignets en bas')
+        }
+      },
+      {
+        name: 'Séance 2 · Pull : Dos / Biceps / Avant-bras',
+        exercises: ['Tirage vertical', 'Rowing assis', 'Curl marteau', 'Curl au pupitre', 'Curl à la barre', 'Flexions des poignets'],
+        plan: {
+          'Tirage vertical': X(3, '6–8', 'Largeur du dos', 'Tractions', 'Lat pulldown'),
+          'Rowing assis': X(3, '6–8', 'Épaisseur du dos', 'Rowing buste penché', 'Machine ou poulie basse'),
+          'Curl marteau': X(3, '6–8', 'Lourd · brachial antérieur (épaisseur du bras)', '', 'Haltères'),
+          'Curl au pupitre': X(3, '8–10', 'Isolation et masse globale du biceps', '', 'Barre EZ'),
+          'Curl à la barre': X(3, '8–10', 'Force globale du biceps', '', 'Barre droite ou EZ'),
+          'Flexions des poignets': X(3, '12–15', 'Renforcement des avant-bras', '', 'Barre EZ, prise en pronation')
+        }
+      },
+      {
+        name: 'Séance 3 · Épaules / Trapèzes / Abdos',
+        exercises: ['Développé assis', 'Élévations latérales', 'Face pull', 'Shrugs', 'Relevé de jambes suspendu', 'Crunch banc décliné', 'Gainage'],
+        plan: {
+          'Développé assis': X(3, '6–8', 'Masse globale des deltoïdes (faisceau antérieur)', 'Machine à développé épaules', 'Haltères, dossier à 75–80°'),
+          'Élévations latérales': X(4, '10–15', 'Deltoïde latéral · largeur de la carrure', 'Poulie basse', 'Haltères'),
+          'Face pull': X(4, '12–15', 'Deltoïde postérieur et posture · fixateurs de l\'omoplate', '', 'Poulie haute, tirage vers le visage / le front'),
+          'Shrugs': X(3, '10–12', 'Trapèzes supérieurs', '', 'Haltères'),
+          'Relevé de jambes suspendu': X(3, '10–12', 'Abdos · enrouler le bassin (pubis vers nombril) · repos 45–60 s', 'Relevé de genoux suspendu', 'Barre fixe'),
+          'Crunch banc décliné': X(3, '10–12', 'Abdos · enroulement strict de la colonne · repos 45–60 s', '', 'Banc décliné, disque de 5 à 10 kg contre la poitrine'),
+          'Gainage': X(2, '30–45 s', 'Superset : gainage latéral droit, latéral gauche, puis ventral, sans pause entre les positions · 1 min de repos entre les tours', '', 'Tapis de sol')
+        }
+      },
+      {
+        name: 'Séance 4 · Jambes',
+        exercises: ['Presse à cuisses', 'Leg curl', 'Leg extension', 'Mollets debout'],
+        plan: {
+          'Presse à cuisses': X(4, '6–8', 'Quadriceps et fessiers · mouvement de force', 'Squat', 'Presse inclinée'),
+          'Leg curl': X(3, '10–12', 'Ischio-jambiers', '', 'Machine'),
+          'Leg extension': X(3, '12–15', 'Isolation des quadriceps', '', 'Machine'),
+          'Mollets debout': X(4, '15', 'Triceps sural (mollets)', 'Mollets à la presse', 'Machine debout')
+        }
+      },
+      {
+        name: 'Séance 5 · Cardio',
+        exercises: ['Cardio'],
+        plan: { Cardio: X(1, '30–45 min', 'Intensité modérée · récupération active et santé cardiovasculaire', '', 'Tapis incliné, vélo elliptique ou rameur') }
+      }
+    ]
   }
 };
 

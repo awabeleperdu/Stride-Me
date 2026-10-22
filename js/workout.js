@@ -338,7 +338,7 @@ export async function workoutView(root) {
       draw();
       if (s.done) {
         root.querySelector(`[data-ex="${exIdx}"] [data-set="${j}"]`)?.classList.add('pop'); vibrate(12);
-        startRest(state.restSeconds, state.exercises[exIdx].name);
+        if (getSettings().autoRest !== false) startRest(state.restSeconds, state.exercises[exIdx].name);
       }
     } else if (e.target.closest('.add-set')) {
       const last = state.exercises[exIdx].sets.at(-1);

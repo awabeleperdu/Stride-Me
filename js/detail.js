@@ -42,6 +42,36 @@ export function bodyDiagram(prim = [], sec = []) {
   return `<div class="bd"><figure>${view(F, prim, s)}<figcaption>Face</figcaption></figure><figure>${view(B, prim, s)}<figcaption>Dos</figcaption></figure></div>`;
 }
 
+/** Image plein écran : toucher l'image pour zoomer / dézoomer, flèches pour passer départ ↔ arrivée, ✕ ou Échap pour fermer. */
+function openLightbox(imgs, start, name) {
+  let i = start, zoom = false;
+  const lb = document.createElement('div');
+  lb.className = 'lb';
+  lb.innerHTML = `<button class="lb-x" aria-label="Fermer">✕</button>
+    ${imgs.length > 1 ? '<button class="lb-nav lb-prev" aria-label="Précédente">‹</button><button class="lb-nav lb-next" aria-label="Suivante">›</button>' : ''}
+    <div class="lb-stage"><img alt="" draggable="false"></div>
+    <p class="lb-cap"></p>`;
+  document.body.appendChild(lb);
+  const stage = lb.querySelector('.lb-stage'), img = lb.querySelector('img'), cap = lb.querySelector('.lb-cap');
+  const paint = () => {
+    img.src = imgs[i]; img.alt = name; zoom = false; img.classList.remove('z'); stage.scrollTo(0, 0);
+    cap.textContent = imgs.length > 1 ? `${name} · ${i ? 'Arrivée' : 'Départ'} (${i + 1}/${imgs.length}) · touche l'image pour zoomer` : `${name} · touche l'image pour zoomer`;
+  };
+  const close = () => { lb.remove(); document.removeEventListener('keydown', onKey, true); };
+  const onKey = (e) => {
+    if (e.key === 'Escape') { e.stopPropagation(); close(); }
+    else if (e.key === 'ArrowRight') { i = (i + 1) % imgs.length; paint(); }
+    else if (e.key === 'ArrowLeft') { i = (i - 1 + imgs.length) % imgs.length; paint(); }
+  };
+  document.addEventListener('keydown', onKey, true);
+  lb.querySelector('.lb-x').onclick = close;
+  lb.querySelector('.lb-prev')?.addEventListener('click', () => { i = (i - 1 + imgs.length) % imgs.length; paint(); });
+  lb.querySelector('.lb-next')?.addEventListener('click', () => { i = (i + 1) % imgs.length; paint(); });
+  img.onclick = () => { zoom = !zoom; img.classList.toggle('z', zoom); };
+  stage.onclick = (e) => { if (e.target === stage && !zoom) close(); };
+  paint();
+}
+
 let open = null;
 export function openExerciseDetail(ex) {
   open?.remove();
@@ -71,6 +101,7 @@ export function openExerciseDetail(ex) {
   const close = () => { el.classList.remove('on'); setTimeout(() => el.remove(), 220); document.removeEventListener('keydown', onKey); open = null; };
   const onKey = (e) => { if (e.key === 'Escape') close(); };
   document.addEventListener('keydown', onKey);
+  el.querySelectorAll('.det-imgs img').forEach((im, i) => { im.style.cursor = 'zoom-in'; im.addEventListener('click', () => openLightbox(imgs, i, ex.name)); });
   el.querySelector('.det-backdrop').onclick = close;
   el.querySelector('.sheet-x').onclick = close;
   requestAnimationFrame(() => el.classList.add('on'));

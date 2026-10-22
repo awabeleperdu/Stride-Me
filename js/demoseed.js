@@ -131,7 +131,7 @@ export async function seedDemo(say = () => {}) {
 export function mountDemoSeed(host) {
   if (!host || !isDemoAccount(getUser())) return;
   host.innerHTML = `<div class="card stack"><h3>Compte de démonstration</h3>
-    <p class="muted">Remplit ce compte avec ${WEEKS} semaines de séances, d'échauffements et de mesures. Remplace tout le contenu actuel de CE compte.</p>
+    <p class="muted">Remplit ce compte avec ${WEEKS} semaines de séances, d'échauffements et de mesures. Remplace tout le contenu actuel de CE compte. Le compte est en lecture seule pour les visiteurs : il faut le déverrouiller dans Firestore (document config/demo_unlock) pour le remplir.</p>
     <button class="btn block" id="demoSeedBtn" type="button">Remplir avec des données de démo</button>
     <small class="muted" id="demoSeedMsg" role="status"></small></div>`;
   const btn = host.querySelector('#demoSeedBtn'), msg = host.querySelector('#demoSeedMsg');
@@ -144,8 +144,20 @@ export function mountDemoSeed(host) {
       toast('Données de démo ajoutées');
     } catch (e) {
       console.error(e);
-      msg.textContent = `Échec : ${e.code || ''} ${e.message || e}`;     // la cause est affichée à l'écran
+      msg.textContent = e.code === 'permission-denied'
+        ? 'Ce compte est verrouillé (lecture seule), c\'est voulu. Pour le remplir : crée le document config/demo_unlock dans Firestore, réessaie, puis supprime ce document.'
+        : `Échec : ${e.code || ''} ${e.message || e}`;     // la cause est affichée à l'écran
       btn.disabled = false;
     }
   });
+}
+
+/** Page #/demo : montre l'e-mail vu par l'appli et le bouton si c'est le compte démo (sert aussi à diagnostiquer). */
+export function demoView(root) {
+  const u = getUser();
+  root.innerHTML = `<div class="stack"><h2>Compte de démo</h2>
+    <div class="card stack"><small class="muted">Connecté en tant que</small><b>${esc(u?.email || '(aucun e-mail : compte anonyme ou Google sans e-mail)')}</b></div>
+    <div id="demoSeed"></div></div>`;
+  if (isDemoAccount(u)) mountDemoSeed(root.querySelector('#demoSeed'));
+  else root.querySelector('#demoSeed').innerHTML = `<div class="card stack"><b>Ce n'est pas le compte démo.</b><p class="muted">Le bouton n'apparaît que pour : ${DEMO_EMAILS.map(esc).join(' ou ')}. Déconnecte-toi (Profil) puis connecte-toi avec cette adresse.</p></div>`;
 }
