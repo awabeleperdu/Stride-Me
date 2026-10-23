@@ -14,6 +14,10 @@
 
 Étudiant en informatique (BTS CIEL), je n'ai trouvé aucune appli de musculation qui me plaisait : des pubs partout, des abonnements pour débloquer le minimum, et surtout aucune vraie modularité. Impossible d'avoir mon propre échauffement, de décaler une séance sans tout casser ou de construire mes séances comme je veux. Alors j'ai créé une application sur mesure, pour moi. Elle est en ligne ici : **https://awabeleperdu.github.io/Stride-Me/**
 
+## 🎬 Présentation en 30 secondes
+
+<!-- VIDEO : glisse-dépose stride-me-readme-muet-1080p.mp4 ICI (sur la ligne vide juste en dessous), puis supprime ce commentaire -->
+
 ## 🧪 Essayer la démo
 
 Pas besoin de créer un compte : un compte de démonstration est rempli avec **5 mois de suivi** (une centaine de séances, échauffements, courbes de progression, mesures du corps) pour voir l'appli telle qu'elle est après des mois d'utilisation.
@@ -22,7 +26,7 @@ Pas besoin de créer un compte : un compte de démonstration est rempli avec **5
 |---|---|
 | **Site** | https://awabeleperdu.github.io/Stride-Me/ |
 | **E-mail** | `demo@stride-me.app` |
-| **Mot de passe** | `stridemedemo` |
+| **Mot de passe** | `METS_ICI_LE_MOT_DE_PASSE` |
 
 > Compte en **lecture seule** : tu peux tout consulter, mais rien ne peut y être ajouté ni modifié.
 
@@ -99,7 +103,7 @@ Chaque séance peut être partagée avec un code : un ami le tape et la récupè
 
 ## 🔐 Comptes et administration
 
-Connexion par e-mail, données privées pour chaque utilisateur, appareils connectés visibles dans le profil, et un espace administrateur protégé par un code pour voir les comptes et bloquer quelqu'un si besoin.
+Connexion par e-mail, données privées pour chaque utilisateur, appareils connectés visibles dans le profil, et un espace administrateur protégé par un code pour voir les comptes et bloquer quelqu'un si besoin. Depuis cet espace je peux aussi publier des **annonces** : un message, un sondage ou une question, envoyés à tout le monde ou à une seule personne, pour récupérer des retours et améliorer l'appli.
 
 ## Technique
 
