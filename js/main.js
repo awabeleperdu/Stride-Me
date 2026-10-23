@@ -15,7 +15,7 @@ import { adminView } from './admin.js';
 import { mountDevices } from './devices.js';
 import { trackUsage, isBlocked, isAdmin } from './track.js';
 import { mountDemoSeed, demoView } from './demoseed.js';
-import { showAnnouncements, mountAnnouncementsCard } from './announcements.js';
+import { showAnnouncements, mountAnnouncementsCard, startBanners } from './announcements.js';
 import { applySettings, getSettings, loadRemoteSettings, mountAppearance } from './settings.js';
 import { esc, toast } from './ui.js';
 import { initTimer } from './timer.js';
@@ -134,7 +134,7 @@ async function boot() {
   register('/demo', demoView);
 
   await startRouter();
-  if (me) setTimeout(() => showAnnouncements({ auto: true }), 1500);     // annonces / sondages de l'administrateur
+  if (me) { startBanners(); showAnnouncements({ auto: true }); }     // annonces / sondages de l'administrateur
   hideSplash();
 }
 
