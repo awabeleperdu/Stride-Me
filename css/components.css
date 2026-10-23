@@ -344,3 +344,13 @@ textarea.input { padding: 10px 12px; min-height: 80px; }
 .zb-chip small { color: var(--text-muted); font-size: .72rem; }
 .zb-chip[aria-pressed="true"] { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 16%, transparent); }
 .zb-chip[aria-pressed="true"] b { color: var(--accent); }
+
+/* Annonces / sondages */
+.ann-opts{gap:8px}
+.ann-opt{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--divider,#8883);border-radius:12px;cursor:pointer}
+.ann-opt:has(input:checked){border-color:var(--accent,#2DE2E6);background:color-mix(in srgb,var(--accent,#2DE2E6) 12%,transparent)}
+.ann-opt input{width:20px;height:20px;accent-color:var(--accent,#2DE2E6);flex:none}
+.ann-res-t{display:flex;justify-content:space-between;gap:10px;font-size:.92rem}
+.ann-bar{height:8px;border-radius:99px;background:var(--input-bg,#8882);overflow:hidden;margin-top:4px}
+.ann-bar i{display:block;height:100%;background:var(--accent,#2DE2E6);border-radius:99px}
+.ann-ans{padding:10px 12px;border-radius:12px;background:var(--input-bg,#8881)}
