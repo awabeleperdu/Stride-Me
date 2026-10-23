@@ -354,3 +354,28 @@ textarea.input { padding: 10px 12px; min-height: 80px; }
 .ann-bar{height:8px;border-radius:99px;background:var(--input-bg,#8882);overflow:hidden;margin-top:4px}
 .ann-bar i{display:block;height:100%;background:var(--accent,#2DE2E6);border-radius:99px}
 .ann-ans{padding:10px 12px;border-radius:12px;background:var(--input-bg,#8881)}
+
+/* ---- Annonces : situations, écran bloquant, bandeau permanent ---- */
+[data-style="info"]{--ann:var(--accent,#2DE2E6)}
+[data-style="prevention"]{--ann:#F5B740}
+[data-style="warning"]{--ann:#FF8A3D}
+[data-style="ban"]{--ann:#FF4D5E}
+.ann-kind{display:flex;align-items:center;gap:8px;font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ann,var(--accent,#2DE2E6))}
+.ann-ico{font-size:1.25rem;line-height:1}
+.ann-block{position:fixed;inset:0;z-index:900;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(6,9,14,.88);backdrop-filter:blur(6px);opacity:0;transition:opacity .2s}
+.ann-block.open{opacity:1}
+.ann-block-card{width:100%;max-width:440px;max-height:90vh;overflow:auto;padding:22px;border-radius:20px;background:var(--card,#1a2028);border:1px solid var(--ann);box-shadow:0 0 0 3px color-mix(in srgb,var(--ann) 22%,transparent),0 20px 60px rgba(0,0,0,.5);color:var(--text,#fff)}
+.ann-block-card h3{font-size:1.3rem}
+.ann-banners{flex-basis:100%;display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.ann-banners:empty{display:none}
+.ann-banner{display:flex;align-items:flex-start;gap:10px;padding:9px 12px;border-radius:12px;background:color-mix(in srgb,var(--ann) 16%,var(--bg,#12171C));border:1px solid color-mix(in srgb,var(--ann) 55%,transparent);font-size:.9rem}
+.ann-banner-t{flex:1;min-width:0;text-align:left;background:none;border:0;padding:0;color:inherit;font:inherit;display:flex;flex-direction:column;gap:2px;cursor:pointer}
+.ann-banner-t span{opacity:.85;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;white-space:pre-wrap}
+.ann-banner-t[aria-expanded="true"] span{-webkit-line-clamp:unset;display:block}
+.ann-banner-x{background:none;border:0;color:inherit;opacity:.7;font-size:1rem;padding:0 2px;cursor:pointer}
+.topbar{flex-wrap:wrap}
+.ann-pick{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ann-pick button{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:12px;border:1px solid var(--divider,#8883);background:none;color:inherit;font:inherit;text-align:left;cursor:pointer}
+.ann-pick button[aria-pressed="true"]{border-color:var(--ann,var(--accent));background:color-mix(in srgb,var(--ann,var(--accent)) 14%,transparent)}
+.ann-exp{display:flex;gap:8px;flex-wrap:wrap}
+.ann-exp .btn{flex:1;min-width:110px}
