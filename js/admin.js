@@ -11,6 +11,7 @@ import { isAdmin, ago, toMs } from './track.js';
 import { esc, toast, vibrate, emptyState } from './ui.js';
 import { lockScreen, isUnlocked, touch, lock } from './adminlock.js';
 import { mountShared } from './admincatalog.js';
+import { mountAnnouncementsAdmin } from './adminann.js';
 
 const DAY = 86400000;
 const fmtDate = (ms) => (ms ? new Date(ms).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }) : '—');
@@ -95,11 +96,12 @@ async function panel(root, me, { relock, change }) {
         <div class="row between"><a class="back-link" href="#/profile">‹ Profil</a>
           <span class="row" style="gap:6px"><button class="btn ghost sm" id="admChange">Changer le code</button><button class="btn ghost sm" id="admLock">🔒 Verrouiller</button></span></div>
         <h2>Administration</h2>
-        <div class="seg" role="group" aria-label="Section">
+        <div class="seg seg3" role="group" aria-label="Section">
           <button type="button" data-admtab="users" aria-pressed="${tab === 'users'}">Comptes</button>
           <button type="button" data-admtab="shared" aria-pressed="${tab === 'shared'}">Catalogue</button>
+          <button type="button" data-admtab="ann" aria-pressed="${tab === 'ann'}">Annonces</button>
         </div>
-        ${tab === 'shared' ? '<div id="admShared"></div>' : `
+        ${tab === 'shared' ? '<div id="admShared"></div>' : tab === 'ann' ? '<div id="admAnn"></div>' : `
         <div class="adm-tiles">
           <div class="card"><small>Comptes</small><b>${c.total}</b></div>
           <div class="card"><small>Actifs 7 j</small><b>${c.active}</b></div>
@@ -115,6 +117,7 @@ async function panel(root, me, { relock, change }) {
         <p class="muted hint-line">« Actif » : ouvert dans les 7 derniers jours · « Inactif » : plus de 30 jours ou jamais ouvert.</p>
         `}
       </div>`;
+    if (tab === 'ann') mountAnnouncementsAdmin(root.querySelector('#admAnn'), { touch }).then((m) => { if (dead || tab !== 'ann') m.unmount(); else shared = m; });
     if (tab === 'shared') mountShared(root.querySelector('#admShared'), { touch }).then((m) => { if (dead || tab !== 'shared') m.unmount(); else shared = m; });
   }
 

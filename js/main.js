@@ -14,7 +14,8 @@ import { exportCSV } from './export.js';
 import { adminView } from './admin.js';
 import { mountDevices } from './devices.js';
 import { trackUsage, isBlocked, isAdmin } from './track.js';
-import { mountDemoSeed } from './demoseed.js';
+import { mountDemoSeed, demoView } from './demoseed.js';
+import { showAnnouncements, mountAnnouncementsCard } from './announcements.js';
 import { applySettings, getSettings, loadRemoteSettings, mountAppearance } from './settings.js';
 import { esc, toast } from './ui.js';
 import { initTimer } from './timer.js';
@@ -33,6 +34,7 @@ async function profileView(root) {
       <h2>Profil</h2>
       <div id="adminLink"></div>
       <div id="demoSeed"></div>
+      <div id="annCard"></div>
       <form class="card stack" id="metrics">
         <h3>Mesures actuelles</h3>
         <div class="grid-2">
@@ -61,6 +63,7 @@ async function profileView(root) {
   mountAppearance(root.querySelector('#appearance'));
   mountDevices(root.querySelector('#devices')).catch(console.warn);
   mountDemoSeed(root.querySelector('#demoSeed'));
+  mountAnnouncementsCard(root.querySelector('#annCard'));
   // Lien visible uniquement pour les administrateurs (document admins/<uid>) ; les autres ne voient rien.
   isAdmin(user).then((ok) => {
     if (ok) root.querySelector('#adminLink').innerHTML = '<a class="card adm-link" href="#/admin"><span><b>Espace administrateur</b><small class="muted">Comptes, activité, appareils</small></span><span aria-hidden="true">›</span></a>';
@@ -128,8 +131,10 @@ async function boot() {
   register('/stats', statsView);
   register('/profile', profileView);
   register('/admin', adminView);
+  register('/demo', demoView);
 
   await startRouter();
+  if (me) setTimeout(() => showAnnouncements({ auto: true }), 1500);     // annonces / sondages de l'administrateur
   hideSplash();
 }
 
