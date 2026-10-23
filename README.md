@@ -1,3 +1,7 @@
+
+
+https://github.com/user-attachments/assets/c8098e09-7734-4544-b8da-59cb062bc206
+
 <p align="center">
   <img src="assets/readme/hero.png" alt="Stride Me – Fitness Log" width="100%">
 </p>
