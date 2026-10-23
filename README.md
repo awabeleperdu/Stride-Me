@@ -1,7 +1,3 @@
-
-
-
-
 <p align="center">
   <img src="assets/readme/hero.png" alt="Stride Me – Fitness Log" width="100%">
 </p>
@@ -37,6 +33,8 @@ Pas besoin de créer un compte : un compte de démonstration est rempli avec **5
 ## Un projet vibe codé
 
 Ce projet est **entièrement vibe codé** : je n'ai pas écrit le code à la main, tout est parti de prompts. Je décide de ce que l'appli doit faire, je teste sur mon téléphone, je dis ce qui ne va pas, et on recommence.
+
+Tout a été réalisé avec **l'offre gratuite de Claude**, sur **plusieurs semaines**, au fil des conversations. Et ce n'est pas fini : **le projet est en constante amélioration**, j'ajoute régulièrement de nouvelles fonctions et je corrige ce qui peut l'être.
 
 Ça m'a appris beaucoup de choses :
 
