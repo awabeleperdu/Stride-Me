@@ -8,6 +8,7 @@
   <link rel="icon" type="image/png" href="assets/favicon.png">
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
   <link rel="manifest" href="manifest.webmanifest">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Stride Me">
   <title>Stride Me – Fitness Log</title>
@@ -18,7 +19,7 @@
     try {
       var h = document.documentElement, s = JSON.parse(localStorage.getItem('settings') || 'null') || {};
       var t = s.theme || localStorage.getItem('theme');
-      if (['aurora', 'pro', 'classic', 'dark', 'gym'].indexOf(t) !== -1) h.setAttribute('data-theme', t);
+      if (['aurora', 'pro', 'classic', 'dark', 'gym', 'stride'].indexOf(t) !== -1) h.setAttribute('data-theme', t);
       if (['lexend', 'atkinson', 'dyslexic'].indexOf(s.font) !== -1) h.setAttribute('data-font', s.font);
       if (['wide', 'xwide'].indexOf(s.spacing) !== -1) h.setAttribute('data-spacing', s.spacing);
       if (s.contrast === true) h.setAttribute('data-contrast', 'high');
@@ -40,6 +41,7 @@
   <link rel="stylesheet" href="css/brand.css">
   <link rel="stylesheet" href="css/catalog.css">
   <link rel="stylesheet" href="css/aurora.css">
+  <link rel="stylesheet" href="css/stride.css">
   <link rel="stylesheet" href="css/pro.css">
   <link rel="stylesheet" href="css/timer.css">
 </head>
@@ -62,7 +64,8 @@
 
   <div id="splash" aria-hidden="true">
     <div class="splash-in">
-      <div class="splash-art"></div>
+      <img class="splash-mark" src="assets/mark.webp" alt="" width="96" height="108">
+      <span class="splash-word wordmark" aria-hidden="true"></span>
       <div class="splash-bar"><i></i></div>
     </div>
   </div>
@@ -70,8 +73,8 @@
   <div id="app-shell">
     <header class="topbar">
       <a href="#/" class="brand" aria-label="Stride Me — accueil">
-        <img class="brand-mark" src="assets/mark.webp" alt="" width="36" height="31">
-        <img class="brand-title" src="assets/title.webp" alt="Stride Me" width="104" height="27">
+        <img class="brand-mark" src="assets/mark.webp" alt="" width="30" height="34">
+        <span class="brand-title wordmark" role="img" aria-label="Stride Me"></span>
       </a>
     </header>
 
