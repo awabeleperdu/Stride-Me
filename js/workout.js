@@ -1,11 +1,11 @@
 import { db } from './firebase-config.js';
 import {
-  doc, getDoc, setDoc, addDoc, collection, serverTimestamp, updateDoc, arrayUnion, increment
+  doc, setDoc, addDoc, collection, serverTimestamp, updateDoc, arrayUnion, increment
 } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
 import { getUser } from './auth.js';
 import { navigate } from './router.js';
 import { esc, toast, icon, dayKey, vibrate } from './ui.js';
-import { queued, QUEUED } from './offline.js';
+import { queued, QUEUED, readDoc } from './offline.js';
 import { getSettings, RESTS } from './settings.js';
 import { startRest, stopRest } from './timer.js';
 import { fetchHistory } from './statistics.js';
@@ -28,7 +28,7 @@ const DEFAULT_CYCLE = [
 export async function getRotation() {
   const uid = getUser().uid;
   const ref = doc(db, 'schedule_rotation', uid);
-  const snap = await getDoc(ref);
+  const snap = await readDoc(ref);
   if (snap.exists()) return snap.data();
   const fresh = { userId: uid, cycle: DEFAULT_CYCLE, startDate: dayKey(), restDates: [], planned: {}, anchors: {} };
   await queued(setDoc(ref, fresh));

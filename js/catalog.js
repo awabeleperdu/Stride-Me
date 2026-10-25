@@ -1,8 +1,9 @@
 // Catalogue d'exercices intégré (≈620 exercices + 2 images chacun, base libre free-exercise-db, domaine public).
 // Données : assets/catalog/catalog.json — images : assets/catalog/<id>-0.webp / -1.webp (hébergées dans le repo GitHub, 0 octet en base Firestore).
 import { db } from './firebase-config.js';
+import { readDocs } from './offline.js';
 import { zoneOfEntry, ZONES } from './zones.js';
-import { collection, getDocs } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
+import { collection } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
 
 const BASE = 'assets/catalog/';
 const CDN = 'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/';
@@ -19,7 +20,7 @@ export async function loadCatalog() {
   // Exercices et machines ajoutés par l'admin : visibles par tous, affichés en premier
   let shared = [];
   try {
-    const snap = await getDocs(collection(db, 'shared_exercises'));
+    const snap = await readDocs(collection(db, 'shared_exercises'));
     shared = snap.docs.map((d) => { const x = d.data(); return { id: 'shared-' + d.id, n: x.name, en: x.name, m: x.muscleGroup || 'Autre', eq: x.equipment || 'Autre', i: x.imageUrl ? 1 : 0, t: x.steps || [], p: [], s: [], lv: '', shared: true, key: norm(`${x.name} ${x.muscleGroup} ${x.equipment}`), img: x.imageUrl || null, img2: null }; })
       .sort((a, b) => a.n.localeCompare(b.n));
   } catch { /* hors ligne ou droits : on garde le catalogue de base */ }

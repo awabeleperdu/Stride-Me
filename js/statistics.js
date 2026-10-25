@@ -1,12 +1,13 @@
 import { db } from './firebase-config.js';
-import { collection, query, where, getDocs, limit } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
+import { collection, query, where, limit } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
 import { getUser } from './auth.js';
+import { readDocs } from './offline.js';
 import { esc, emptyState, skeleton } from './ui.js';
 import { mountBody } from './body.js';
 
 export async function fetchHistory(max = 200) {
   const q = query(collection(db, 'workouts'), where('userId', '==', getUser().uid), limit(max));
-  const snap = await getDocs(q);
+  const snap = await readDocs(q);
   // Tri côté client : évite l'index composite (userId + date) au démarrage.
   return snap.docs.map((d) => ({ id: d.id, ...d.data() })).sort((a, b) => b.date.localeCompare(a.date));
 }

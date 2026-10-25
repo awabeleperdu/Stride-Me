@@ -1,9 +1,9 @@
 // Suivi du corps : poids, IMC et mensurations (courbes d'évolution). Collection `measurements` (1 doc par relevé).
 import { db } from './firebase-config.js';
-import { collection, query, where, getDocs, setDoc, deleteDoc, doc, serverTimestamp, limit } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
+import { collection, query, where, setDoc, deleteDoc, doc, serverTimestamp, limit } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
 import { getUser } from './auth.js';
 import { esc, toast, vibrate, dayKey } from './ui.js';
-import { queued } from './offline.js';
+import { queued, readDocs } from './offline.js';
 import { lineChart } from './statistics.js';
 
 export const FIELDS = [
@@ -32,7 +32,7 @@ const fmtD = (d) => new Date(d + 'T12:00:00').toLocaleDateString('fr-FR', { day:
 let metric = 'weight';
 
 export async function mountBody(host) {
-  const snap = await getDocs(query(collection(db, 'measurements'), where('userId', '==', getUser().uid), limit(400)));
+  const snap = await readDocs(query(collection(db, 'measurements'), where('userId', '==', getUser().uid), limit(400)));
   let rows = snap.docs.map((d) => ({ id: d.id, ...d.data() })).sort((a, b) => a.date.localeCompare(b.date));
   let height = [...rows].reverse().find((r) => r.height)?.height || '';
 

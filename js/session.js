@@ -1,7 +1,8 @@
 // Aperçu d'une séance : carrousel plein écran des machines (swipe, zoom/parallaxe), puis "Commencer".
 import { db } from './firebase-config.js';
-import { collection, query, where, getDocs } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
+import { collection, query, where } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
 import { getUser } from './auth.js';
+import { readDocs } from './offline.js';
 import { getRotation, sessionForDate, startWorkout } from './workout.js';
 import { navigate } from './router.js';
 import { esc, icon, dayKey } from './ui.js';
@@ -12,7 +13,7 @@ const norm = (s) => String(s || '').trim().toLowerCase();
 
 export async function loadLibrary() {
   const q = query(collection(db, 'exercises'), where('ownerId', '==', getUser().uid));
-  const snap = await getDocs(q);
+  const snap = await readDocs(q);
   const map = new Map();
   const cat = await loadCatalog().catch(() => []);
   cat.forEach((e) => {

@@ -1,6 +1,7 @@
 // Accueil interactif : bande de jours, cartes de séances à swiper, menu flottant animé.
 import { getRotation, sessionForDate, saveRotation, startWorkout, insertRestDay, discard, placeSession, adaptMessage, backToBackPlace, askBackToBack } from './workout.js';
 import { loadLibrary } from './session.js';
+import { warmImages } from './offline.js';
 import { navigate } from './router.js';
 import { esc, icon, toast, dayKey, vibrate } from './ui.js';
 
@@ -29,6 +30,8 @@ export async function homeView(root) {
     const todayKey = dayKey();
     const keys = Array.from({ length: 7 }, (_, i) => dayKey(new Date(Date.now() + i * 86400000)));
     const sessions = keys.map((k) => sessionForDate(rot, k));
+    // photos de toutes les séances du cycle : gardées sur le téléphone pour la salle sans réseau
+    warmImages((rot.cycle || []).flatMap((c) => (c.exercises || []).flatMap((n) => { const e = lib.get(norm(n)); return e ? [e.imageUrl, ...(e.images || [])] : []; })));
     const draft = readDraft();
     const rel = (i) => (i === 0 ? "Aujourd'hui" : i === 1 ? 'Demain' : cap(fmt(keys[i], { weekday: 'long', day: 'numeric' })));
 
