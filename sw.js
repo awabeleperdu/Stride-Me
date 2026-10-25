@@ -2,7 +2,7 @@
 // - Fichiers de l'appli (même origine) : réseau d'abord pour avoir toujours la dernière version ; si le réseau est absent
 //   ou lent (> 3 s), on sert la copie gardée. Chaque fichier chargé est gardé automatiquement.
 // - SDK Firebase (gstatic) et images du catalogue (GitHub) : copie gardée d'abord (ils ne changent pas).
-const VERSION = '20261024-221756';
+const VERSION = '20261025-221432';
 const CACHE = 'stride-' + VERSION;
 const PRECACHE = ["./", "index.html", "manifest.webmanifest", "css/aurora.css", "css/brand.css", "css/calendar.css", "css/catalog.css", "css/components.css", "css/fonts.css", "css/gym.css", "css/main.css", "css/pro.css", "css/settings.css", "css/stride.css", "css/themes.css", "css/timer.css", "js/admin.js", "js/adminann.js", "js/admincatalog.js", "js/adminlock.js", "js/announce.js", "js/announcements.js", "js/auth.js", "js/body.js", "js/calendar.js", "js/catalog.js", "js/demoseed.js", "js/detail.js", "js/devices.js", "js/dnd.js", "js/exercises.js", "js/export.js", "js/firebase-config.js", "js/home.js", "js/login.js", "js/main.js", "js/offline.js", "js/planning.js", "js/resume.js", "js/router.js", "js/session.js", "js/settings.js", "js/sharecode.js", "js/statistics.js", "js/swipe.js", "js/timer.js", "js/track.js", "js/ui.js", "js/warmup.js", "js/workout.js", "js/zones.js", "assets/apple-touch-icon.png", "assets/decor.webp", "assets/favicon.png", "assets/icon-192.png", "assets/icon-512.png", "assets/icon-maskable-512.png", "assets/mark.webp", "assets/title.webp", "assets/catalog/catalog.json", "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js", "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js", "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js", "https://www.gstatic.com/firebasejs/10.14.1/firebase-storage.js", "https://www.gstatic.com/firebasejs/10.14.1/firebase-functions.js"];
 const IMMUTABLE = (u) => (u.hostname === 'www.gstatic.com' && u.pathname.startsWith('/firebasejs/')) || u.hostname === 'raw.githubusercontent.com';
@@ -38,7 +38,8 @@ self.addEventListener('fetch', (e) => {
 
   e.respondWith((async () => {
     const cached = await caches.match(r, { ignoreVary: true });
-    if (!same) {                                                        // copie d'abord
+    const catImg = same && /\/assets\/catalog\/[^/]+\.webp$/.test(u.pathname);  // photos d'exercices : jamais modifiées
+    if (!same || catImg) {                                              // copie d'abord
       if (cached) return cached;
       return keep(r, await fetch(r));
     }
@@ -48,6 +49,7 @@ self.addEventListener('fetch', (e) => {
       catch { return (r.mode === 'navigate' && (await caches.match('index.html'))) || (await caches.match('./')) || Response.error(); }
     }
     net.catch(() => {});                                                // la mise à jour se fait en arrière-plan
+    if (self.navigator.onLine === false) return cached;                 // hors ligne : copie tout de suite, sans attendre
     return Promise.race([net, new Promise((res) => setTimeout(() => res(cached), SLOW))]).catch(() => cached);
   })());
 });
