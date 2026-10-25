@@ -7,32 +7,30 @@
 .topbar { justify-content: flex-start; gap: 12px; min-height: 56px; }
 .brand { display: flex; align-items: center; gap: 8px; flex: none; }
 .brand-mark { height: 34px; width: auto; display: block; }
-.brand-title { height: 22px; width: auto; display: block; }
+.wordmark { display: block; aspect-ratio: 686 / 124; background-color: var(--text, #fff);
+  -webkit-mask: url("../assets/title.webp") center / contain no-repeat; mask: url("../assets/title.webp") center / contain no-repeat; }
+.brand-title { height: 20px; }
 body[data-route="sub"] .brand-mark { height: 30px; }
 .auth-mode .topbar { display: none; }
 
 /* ---------- Splash ---------- */
 #splash {
-  position: fixed; inset: 0; z-index: 500; display: grid; place-items: center; background: #12171C;
+  position: fixed; inset: 0; z-index: 500; display: grid; place-items: center; background: #0B0F14;
   transition: opacity .45s ease, transform .45s ease;
 }
 #splash.out { opacity: 0; transform: scale(1.04); pointer-events: none; }
 .splash-in { display: flex; flex-direction: column; align-items: center; gap: 22px; width: 100%; }
-.splash-art {
-  width: min(100%, 560px); aspect-ratio: 512 / 279; background: url("../assets/decor.webp") center / cover no-repeat;
-  -webkit-mask-image: radial-gradient(ellipse 62% 66% at 50% 50%, #000 55%, transparent 100%);
-  mask-image: radial-gradient(ellipse 62% 66% at 50% 50%, #000 55%, transparent 100%);
-  animation: splashIn .7s cubic-bezier(.2, 1.2, .4, 1) both;
-}
+.splash-mark { width: 96px; height: auto; animation: splashIn .7s cubic-bezier(.2, 1.2, .4, 1) both; }
+.splash-word { width: 150px; background-color: #fff; animation: splashIn .7s .08s cubic-bezier(.2, 1.2, .4, 1) both; }
 .splash-bar { width: 120px; height: 4px; border-radius: 4px; background: rgba(255, 255, 255, .14); overflow: hidden; }
-.splash-bar i { display: block; width: 40%; height: 100%; border-radius: 4px; background: linear-gradient(90deg, #F26B4B, #19C9C9); animation: splashBar 1.1s ease-in-out infinite; }
+.splash-bar i { display: block; width: 40%; height: 100%; border-radius: 4px; background: #22D3EE; animation: splashBar 1.1s ease-in-out infinite; }
 @keyframes splashIn { from { opacity: 0; transform: translateY(14px) scale(.92); } to { opacity: 1; transform: none; } }
 @keyframes splashBar { from { transform: translateX(-110%); } to { transform: translateX(300%); } }
 
 /* ---------- Connexion ---------- */
 .auth-head { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 4px; margin-bottom: 4px; }
-.auth-logo { width: 96px; height: auto; }
-.auth-title { width: 160px; height: auto; margin-bottom: 6px; }
+.auth-logo { width: 84px; height: auto; margin-bottom: 6px; }
+.auth-title { width: 150px; margin-bottom: 6px; }
 
 /* ---------- Squelettes ---------- */
 .skel { display: flex; flex-direction: column; gap: 14px; }
@@ -52,7 +50,7 @@ body[data-route="sub"] .brand-mark { height: 30px; }
 .empty { text-align: center; padding: 8px 0 24px; display: flex; flex-direction: column; align-items: center; gap: 6px; }
 .empty-art {
   width: min(100%, 340px); aspect-ratio: 512 / 279; border-radius: 20px; margin-bottom: 10px;
-  background: #1A2129 url("../assets/decor.webp") center / cover no-repeat;
+  background: #12171C url("../assets/mark.webp") center / auto 46% no-repeat;
   box-shadow: 0 18px 40px -20px rgba(0, 0, 0, .55);
 }
 

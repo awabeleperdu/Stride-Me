@@ -1,13 +1,15 @@
 .cat-picker{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.5);display:flex;align-items:flex-end}
 .cat-sheet{background:var(--bg-surface,var(--card,#fff));color:var(--text-main,var(--text,#111));width:100%;max-height:92vh;border-radius:18px 18px 0 0;padding:14px 14px 0;display:flex;flex-direction:column;gap:8px}
+.cat-sheet>*{flex-shrink:0}   /* sans ça les rangées de raccourcis (zones, muscles, matériel) sont écrasées à 8 px de haut par la liste */
 .cat-head{display:flex;justify-content:space-between;align-items:center}
 .cat-x{border:0;background:transparent;color:inherit;font-size:20px;padding:6px 10px}
 .cat-q{width:100%;box-sizing:border-box;padding:12px;border-radius:10px;border:1px solid var(--border-color,#8884);background:transparent;color:inherit;font:inherit}
-.cat-chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
-.cat-chip{flex:none;border:1px solid var(--border-color,#8884);background:transparent;color:inherit;border-radius:99px;padding:6px 12px;font:inherit;font-size:.85em}
-.cat-chip.on{background:var(--accent,#0A8F9C);border-color:transparent;color:#fff}
+.cat-chips{display:flex;gap:6px;overflow-x:auto;padding:2px 0 4px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.cat-chips::-webkit-scrollbar{display:none}
+.cat-chip{flex:none;white-space:nowrap;cursor:pointer;border:1px solid var(--border-color,#8884);background:transparent;color:inherit;border-radius:99px;padding:6px 12px;font:inherit;font-size:.85em}
+.cat-chip.on{background:var(--accent,#0A8F9C);border-color:transparent;color:var(--accent-contrast,#fff);font-weight:700}
 .cat-count{font-size:.8em;opacity:.65}
-.cat-list{overflow-y:auto;display:flex;flex-direction:column;gap:6px;padding-bottom:20px}
+.cat-list{flex:1 1 auto;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:6px;padding-bottom:20px}
 .cat-row{display:flex;gap:12px;align-items:center;text-align:left;border:1px solid var(--border-color,#8883);background:transparent;color:inherit;border-radius:12px;padding:6px;font:inherit}
 .cat-row img{width:64px;height:64px;border-radius:8px;object-fit:cover;background:#8882}
 .cat-row span{display:flex;flex-direction:column;gap:2px}.cat-row small{opacity:.65}
@@ -26,7 +28,7 @@
 .det-body h4{margin:6px 0 0;font-size:1rem}
 .det-imgs{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none}
 .det-imgs figure{flex:0 0 86%;margin:0;scroll-snap-align:center;position:relative}
-.det-imgs img{width:100%;aspect-ratio:4/3;object-fit:contain;border-radius:14px;background:#8882;display:block}
+.det-imgs img{width:100%;aspect-ratio:3/2;object-fit:cover;border-radius:14px;background:#8882;display:block}
 .det-imgs figcaption{position:absolute;left:10px;bottom:10px;background:rgba(0,0,0,.6);color:#fff;font-size:.75rem;padding:3px 10px;border-radius:99px}
 .det-chips{display:flex;gap:6px;flex-wrap:wrap}
 .det-steps{margin:0;padding-left:1.3em;display:flex;flex-direction:column;gap:10px;line-height:1.5}
@@ -45,12 +47,15 @@
 .sh-row{gap:10px}.sh-main{flex:1;min-width:0;display:flex;flex-direction:column}
 .sh-ph{display:grid;place-items:center;color:var(--text-muted)}
 
-/* Image en grand (fiche exercice) */
-.lb{position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.94);display:flex;flex-direction:column;align-items:center;justify-content:center}
-.lb-stage{flex:1;width:100%;overflow:auto;display:flex;align-items:center;justify-content:center;-webkit-overflow-scrolling:touch}
-.lb-stage img{max-width:100%;max-height:100%;object-fit:contain;cursor:zoom-in;touch-action:pan-x pan-y pinch-zoom}
-.lb-stage img.z{max-width:none;max-height:none;width:220%;cursor:zoom-out}
-.lb-x{position:absolute;top:max(12px,env(safe-area-inset-top));right:12px;z-index:2;width:44px;height:44px;border-radius:50%;border:0;background:rgba(255,255,255,.18);color:#fff;font-size:1.2rem;cursor:pointer}
-.lb-nav{position:absolute;top:50%;z-index:2;width:44px;height:64px;margin-top:-32px;border:0;border-radius:12px;background:rgba(255,255,255,.16);color:#fff;font-size:2rem;cursor:pointer}
-.lb-prev{left:8px}.lb-next{right:8px}
-.lb-cap{margin:0;padding:10px 16px max(14px,env(safe-area-inset-bottom));color:#ddd;font-size:.8rem;text-align:center}
+/* Photos en grand (fiche exercice) */
+.lb{position:fixed;inset:0;z-index:1000;background:rgba(5,8,14,.97);display:flex;flex-direction:column}
+.lb-top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:max(12px,env(safe-area-inset-top)) 14px 10px;color:#fff}
+.lb-top b{font-size:1rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lb-x{flex:none;width:42px;height:42px;border-radius:50%;border:0;background:rgba(255,255,255,.16);color:#fff;font-size:1.15rem;cursor:pointer}
+.lb-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:4px 12px max(20px,env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:14px;align-items:center}
+.lb-fig{margin:0;width:100%;max-width:960px;position:relative}
+.lb-pan{overflow:auto;border-radius:14px;background:#0003;-webkit-overflow-scrolling:touch}
+.lb-pan img{display:block;width:100%;height:auto;border-radius:14px;cursor:zoom-in}
+.lb-pan.z img{width:220%;max-width:none;cursor:zoom-out}
+.lb-fig figcaption{position:absolute;left:10px;top:10px;background:rgba(0,0,0,.65);color:#fff;font-size:.78rem;padding:3px 11px;border-radius:99px;pointer-events:none}
+.lb-hint{margin:0;color:#9aa6bb;font-size:.78rem;text-align:center}
