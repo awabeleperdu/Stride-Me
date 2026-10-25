@@ -35,8 +35,8 @@ export function showLogin() {
       root.innerHTML = `
         <div class="auth-wrap">
           <div class="auth-head">
-            <img class="auth-logo" src="assets/mark.webp" alt="" width="96" height="82">
-            <img class="auth-title" src="assets/title.webp" alt="Stride Me" width="160" height="42">
+            <img class="auth-logo" src="assets/mark.webp" alt="" width="84" height="94">
+            <span class="auth-title wordmark" role="img" aria-label="Stride Me"></span>
             <h2>${up ? 'Créer un compte' : 'Connexion'}</h2>
             <p class="muted">${up ? 'Tes séances sont rattachées à ton compte, personne d\'autre ne les voit.' : 'Retrouve tes séances et ton planning.'}</p>
           </div>

@@ -1,8 +1,9 @@
 // Suivi du corps : poids, IMC et mensurations (courbes d'évolution). Collection `measurements` (1 doc par relevé).
 import { db } from './firebase-config.js';
-import { collection, query, where, getDocs, addDoc, deleteDoc, doc, serverTimestamp, limit } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
+import { collection, query, where, getDocs, setDoc, deleteDoc, doc, serverTimestamp, limit } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
 import { getUser } from './auth.js';
 import { esc, toast, vibrate, dayKey } from './ui.js';
+import { queued } from './offline.js';
 import { lineChart } from './statistics.js';
 
 export const FIELDS = [
@@ -105,7 +106,8 @@ export async function mountBody(host) {
     if (!any) { toast('Renseigne au moins une mesure'); return; }
     if (data.weight && (data.weight < 25 || data.weight > 350)) { toast('Poids invalide'); return; }
     try {
-      const ref = await addDoc(collection(db, 'measurements'), data);
+      const ref = doc(collection(db, 'measurements'));
+      await queued(setDoc(ref, data));
       rows.push({ id: ref.id, ...data }); rows.sort((a, b) => a.date.localeCompare(b.date));
       toast('Relevé enregistré'); vibrate(12); draw();
     } catch (err) { console.error(err); toast('Enregistrement impossible'); }

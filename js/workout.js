@@ -5,6 +5,7 @@ import {
 import { getUser } from './auth.js';
 import { navigate } from './router.js';
 import { esc, toast, icon, dayKey, vibrate } from './ui.js';
+import { queued, QUEUED } from './offline.js';
 import { getSettings, RESTS } from './settings.js';
 import { startRest, stopRest } from './timer.js';
 import { fetchHistory } from './statistics.js';
@@ -30,7 +31,7 @@ export async function getRotation() {
   const snap = await getDoc(ref);
   if (snap.exists()) return snap.data();
   const fresh = { userId: uid, cycle: DEFAULT_CYCLE, startDate: dayKey(), restDates: [], planned: {}, anchors: {} };
-  await setDoc(ref, fresh);
+  await queued(setDoc(ref, fresh));
   return fresh;
 }
 
@@ -39,7 +40,7 @@ const daysBetween = (a, b) => Math.round((toUTC(b) - toUTC(a)) / 86400000);
 
 /** Séance d'une date, ou null si jour de repos. Chaque repos inséré décale la suite du cycle. */
 export async function saveRotation(rot) {
-  await setDoc(doc(db, 'schedule_rotation', getUser().uid), { ...rot, userId: getUser().uid });
+  await queued(setDoc(doc(db, 'schedule_rotation', getUser().uid), { ...rot, userId: getUser().uid }));
 }
 
 /* Roulement : le cycle tourne dans l'ordre. Quand on place une séance X un jour donné (« ancre »),
@@ -150,7 +151,7 @@ export function adaptMessage(rot, id, info) {
 }
 
 export async function insertRestDay(key = dayKey()) {
-  await updateDoc(doc(db, 'schedule_rotation', getUser().uid), { restDates: arrayUnion(key) });
+  await queued(updateDoc(doc(db, 'schedule_rotation', getUser().uid), { restDates: arrayUnion(key) }));
 }
 
 /* ---------------------------------------------------------
@@ -429,7 +430,7 @@ async function finishWorkout(feeling) {
   const warmup = warmPayload(state.warm);
 
   try {
-    await addDoc(collection(db, 'workouts'), {
+    const saved = await queued(addDoc(collection(db, 'workouts'), {
       userId: getUser().uid,
       sessionId: state.sessionId,
       sessionName: state.sessionName,
@@ -440,10 +441,10 @@ async function finishWorkout(feeling) {
       exercises,
       ...(warmup ? { warmup } : {}),
       createdAt: serverTimestamp()
-    });
+    }));
     setDoc(doc(db, 'users', getUser().uid), { workoutCount: increment(1), lastWorkoutAt: serverTimestamp() }, { merge: true }).catch(() => {});
     discard();
-    toast('Séance enregistrée');
+    toast(saved === QUEUED ? 'Séance gardée sur le téléphone · envoyée à la reconnexion' : 'Séance enregistrée');
     navigate('/stats');
   } catch (e) {
     console.error(e);

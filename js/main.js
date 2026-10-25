@@ -14,6 +14,7 @@ import { exportCSV } from './export.js';
 import { adminView } from './admin.js';
 import { mountDevices } from './devices.js';
 import { trackUsage, isBlocked, isAdmin } from './track.js';
+import { initOffline } from './offline.js';
 import { mountDemoSeed, demoView } from './demoseed.js';
 import { showAnnouncements, mountAnnouncementsCard, startBanners } from './announcements.js';
 import { applySettings, getSettings, loadRemoteSettings, mountAppearance } from './settings.js';
@@ -73,7 +74,7 @@ async function profileView(root) {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
     const num = (v) => (v === '' ? null : Number(String(v).replace(',', '.')) || null);
-    await setDoc(ref, { metrics: { weight: num(fd.get('weight')), height: num(fd.get('height')) } }, { merge: true });
+    await queued(setDoc(ref, { metrics: { weight: num(fd.get('weight')), height: num(fd.get('height')) } }, { merge: true }));
     toast('Mesures enregistrées');
   });
   root.querySelector('#csv').addEventListener('click', exportCSV);
@@ -112,7 +113,7 @@ async function boot() {
 
   // Compte bloqué par l'administrateur : on referme la session et on l'explique.
   const me = getUser();
-  if (me && await isBlocked(me)) {
+  if (me && await Promise.race([isBlocked(me), new Promise((r) => setTimeout(() => r(false), 3000))])) {
     await signOutQuiet();
     document.getElementById('app-shell').classList.add('auth-mode');
     document.getElementById('view').innerHTML = '<div class="card stack auth-wrap"><h3>Compte désactivé</h3><p class="muted">Ton accès a été désactivé par l\'administrateur. Contacte-le pour le réactiver.</p></div>';
@@ -134,6 +135,7 @@ async function boot() {
   register('/demo', demoView);
 
   await startRouter();
+  initOffline();
   if (me) { startBanners(); showAnnouncements({ auto: true }); }     // annonces / sondages de l'administrateur
   hideSplash();
 }

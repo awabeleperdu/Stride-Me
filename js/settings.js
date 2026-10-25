@@ -12,7 +12,8 @@ export const THEMES = [
   { id: 'aurora',  label: 'Aurora', bg: '#070B14', card: '#1A2236', text: '#F3F6FB', accent: '#2DE2E6' },
   { id: 'classic', label: 'Clair',  bg: '#F6F8F9', card: '#FFFFFF', text: '#1A1A1A', accent: '#0A8F9C' },
   { id: 'dark',    label: 'Dark',   bg: '#11161B', card: '#1B222A', text: '#E0E0E0', accent: '#22D3D3' },
-  { id: 'gym',     label: 'Salle',  bg: '#0A0A0A', card: '#141414', text: '#FFFFFF', accent: '#FF1E1E' }
+  { id: 'gym',     label: 'Salle',  bg: '#0A0A0A', card: '#141414', text: '#FFFFFF', accent: '#FF1E1E' },
+  { id: 'stride', label: 'Stride', bg: '#0B0F14', card: '#121922', text: '#F2F6FA', accent: '#22D3EE' }
 ];
 
 export const FONTS = [
