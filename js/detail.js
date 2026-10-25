@@ -4,72 +4,49 @@ const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '
 export const MUSCLE_FR = { chest: 'Pectoraux', lats: 'Grand dorsal', 'middle back': 'Milieu du dos', 'lower back': 'Lombaires', traps: 'Trapèzes', shoulders: 'Épaules', biceps: 'Biceps', triceps: 'Triceps', forearms: 'Avant-bras', quadriceps: 'Quadriceps', hamstrings: 'Ischio-jambiers', glutes: 'Fessiers', calves: 'Mollets', abdominals: 'Abdominaux', adductors: 'Adducteurs', abductors: 'Abducteurs', neck: 'Cou' };
 const LEVEL_FR = { d: 'Débutant', i: 'Intermédiaire', e: 'Expert' };
 
-// Formes (viewBox 100×210) par muscle : face / dos
-const F = {
-  neck: ['<rect x="45" y="30" width="10" height="9" rx="3"/>'],
-  shoulders: ['<circle cx="31" cy="50" r="8.5"/>', '<circle cx="69" cy="50" r="8.5"/>'],
-  chest: ['<rect x="36" y="54" width="13" height="16" rx="6"/>', '<rect x="51" y="54" width="13" height="16" rx="6"/>'],
-  biceps: ['<ellipse cx="23" cy="72" rx="5" ry="11"/>', '<ellipse cx="77" cy="72" rx="5" ry="11"/>'],
-  forearms: ['<ellipse cx="20" cy="99" rx="4.5" ry="12"/>', '<ellipse cx="80" cy="99" rx="4.5" ry="12"/>'],
-  abdominals: ['<rect x="41" y="73" width="18" height="32" rx="7"/>'],
-  quadriceps: ['<ellipse cx="41" cy="136" rx="8" ry="22"/>', '<ellipse cx="59" cy="136" rx="8" ry="22"/>'],
-  adductors: ['<ellipse cx="48" cy="124" rx="2.6" ry="12"/>', '<ellipse cx="52" cy="124" rx="2.6" ry="12"/>'],
-  abductors: ['<ellipse cx="32" cy="122" rx="3" ry="11"/>', '<ellipse cx="68" cy="122" rx="3" ry="11"/>'],
-  calves: ['<ellipse cx="40" cy="178" rx="5.5" ry="15"/>', '<ellipse cx="60" cy="178" rx="5.5" ry="15"/>']
+// Schéma anatomique : dessins réalistes (face / dos) dans js/anatomy.js. Chaque muscle du catalogue (free-exercise-db)
+// correspond à une ou plusieurs zones du dessin.
+import { BODY } from './anatomy.js';
+const FRONT = {
+  chest: ['chest'], shoulders: ['deltoids'], biceps: ['biceps'], triceps: ['triceps'], forearms: ['forearm'], traps: ['trapezius'],
+  abdominals: ['abs', 'obliques'], quadriceps: ['quadriceps'], adductors: ['adductors'], calves: ['calves', 'tibialis'], neck: ['neck']
 };
-const B = {
-  neck: F.neck,
-  traps: ['<polygon points="50,38 36,52 50,64 64,52"/>'],
-  shoulders: F.shoulders,
-  lats: ['<ellipse cx="38" cy="76" rx="7" ry="15"/>', '<ellipse cx="62" cy="76" rx="7" ry="15"/>'],
-  'middle back': ['<rect x="43" y="62" width="14" height="16" rx="5"/>'],
-  'lower back': ['<rect x="42" y="80" width="16" height="17" rx="6"/>'],
-  triceps: ['<ellipse cx="23" cy="72" rx="5" ry="11"/>', '<ellipse cx="77" cy="72" rx="5" ry="11"/>'],
-  forearms: F.forearms,
-  glutes: ['<ellipse cx="41" cy="112" rx="9.5" ry="9"/>', '<ellipse cx="59" cy="112" rx="9.5" ry="9"/>'],
-  hamstrings: ['<ellipse cx="41" cy="145" rx="8" ry="19"/>', '<ellipse cx="59" cy="145" rx="8" ry="19"/>'],
-  abductors: F.abductors,
-  calves: F.calves
+const BACK = {
+  traps: ['trapezius'], neck: ['neck'], shoulders: ['deltoids'], lats: ['upper-back'], 'middle back': ['upper-back'], 'lower back': ['lower-back'],
+  triceps: ['triceps'], forearms: ['forearm'], glutes: ['gluteal'], abductors: ['gluteal'], hamstrings: ['hamstring'], adductors: ['adductors'], calves: ['calves']
 };
-const BASE = '<circle cx="50" cy="19" r="10"/><rect x="34" y="42" width="32" height="64" rx="12"/><rect x="14" y="48" width="14" height="66" rx="7"/><rect x="72" y="48" width="14" height="66" rx="7"/><rect x="34" y="100" width="15" height="92" rx="7"/><rect x="51" y="100" width="15" height="92" rx="7"/>';
-
-function view(shapes, prim, sec) {
-  const layer = (keys, cls) => keys.filter((k) => shapes[k]).map((k) => `<g class="${cls}">${shapes[k].join('')}</g>`).join('');
-  return `<svg viewBox="0 0 100 200" role="img" aria-hidden="true"><g class="bd-base">${BASE}</g>${layer(sec, 'bd-sec')}${layer(prim, 'bd-pri')}</svg>`;
+function view(side, map, prim, sec) {
+  const shapes = BODY[side];
+  const zone = (names) => new Set(names.flatMap((m) => map[m] || []));
+  const P = zone(prim), S = zone(sec);
+  const items = Object.entries(shapes).flatMap(([z, list]) => {
+    const k = P.has(z) ? 2 : S.has(z) ? 1 : 0;
+    const cls = z === 'head' || z === 'hair' ? 'bd-head' : ['bd-base', 'bd-sec', 'bd-pri'][k];
+    return list.map((d) => ({ k, h: `<path class="${cls}" d="${d}"/>` }));
+  }).sort((x, y) => x.k - y.k);                 // zones colorées en dernier : leur contour passe au-dessus
+  const vb = side === 'front' ? '0 0 724 1448' : '724 0 724 1448';
+  return `<svg viewBox="${vb}" role="img" aria-hidden="true">${items.map((i) => i.h).join('')}<path class="bd-line" d="${BODY[side === 'front' ? 'borderFront' : 'borderBack']}"/></svg>`;
 }
 export function bodyDiagram(prim = [], sec = []) {
   const s = sec.filter((m) => !prim.includes(m));
-  return `<div class="bd"><figure>${view(F, prim, s)}<figcaption>Face</figcaption></figure><figure>${view(B, prim, s)}<figcaption>Dos</figcaption></figure></div>`;
+  return `<div class="bd"><figure>${view('front', FRONT, prim, s)}<figcaption>Face</figcaption></figure><figure>${view('back', BACK, prim, s)}<figcaption>Dos</figcaption></figure></div>`;
 }
 
-/** Image plein écran : toucher l'image pour zoomer / dézoomer, flèches pour passer départ ↔ arrivée, ✕ ou Échap pour fermer. */
+/** Photos en grand : toutes les images l'une sous l'autre (départ puis arrivée), pleine largeur, à faire défiler.
+    Toucher une image = zoom x2 (on la fait glisser pour se déplacer), retoucher = retour. ✕ ou Échap pour fermer. */
 function openLightbox(imgs, start, name) {
-  let i = start, zoom = false;
   const lb = document.createElement('div');
   lb.className = 'lb';
-  lb.innerHTML = `<button class="lb-x" aria-label="Fermer">✕</button>
-    ${imgs.length > 1 ? '<button class="lb-nav lb-prev" aria-label="Précédente">‹</button><button class="lb-nav lb-next" aria-label="Suivante">›</button>' : ''}
-    <div class="lb-stage"><img alt="" draggable="false"></div>
-    <p class="lb-cap"></p>`;
+  lb.innerHTML = `<div class="lb-top"><b>${esc(name)}</b><button class="lb-x" aria-label="Fermer">✕</button></div>
+    <div class="lb-scroll">${imgs.map((u, k) => `<figure class="lb-fig"><div class="lb-pan"><img src="${esc(u)}" alt="${esc(name)}${imgs.length > 1 ? (k ? ' — arrivée' : ' — départ') : ''}" draggable="false"></div>${imgs.length > 1 ? `<figcaption>${k ? 'Arrivée' : 'Départ'}</figcaption>` : ''}</figure>`).join('')}
+      <p class="lb-hint">Touche une photo pour zoomer</p></div>`;
   document.body.appendChild(lb);
-  const stage = lb.querySelector('.lb-stage'), img = lb.querySelector('img'), cap = lb.querySelector('.lb-cap');
-  const paint = () => {
-    img.src = imgs[i]; img.alt = name; zoom = false; img.classList.remove('z'); stage.scrollTo(0, 0);
-    cap.textContent = imgs.length > 1 ? `${name} · ${i ? 'Arrivée' : 'Départ'} (${i + 1}/${imgs.length}) · touche l'image pour zoomer` : `${name} · touche l'image pour zoomer`;
-  };
   const close = () => { lb.remove(); document.removeEventListener('keydown', onKey, true); };
-  const onKey = (e) => {
-    if (e.key === 'Escape') { e.stopPropagation(); close(); }
-    else if (e.key === 'ArrowRight') { i = (i + 1) % imgs.length; paint(); }
-    else if (e.key === 'ArrowLeft') { i = (i - 1 + imgs.length) % imgs.length; paint(); }
-  };
+  const onKey = (e) => { if (e.key === 'Escape') { e.stopPropagation(); close(); } };
   document.addEventListener('keydown', onKey, true);
   lb.querySelector('.lb-x').onclick = close;
-  lb.querySelector('.lb-prev')?.addEventListener('click', () => { i = (i - 1 + imgs.length) % imgs.length; paint(); });
-  lb.querySelector('.lb-next')?.addEventListener('click', () => { i = (i + 1) % imgs.length; paint(); });
-  img.onclick = () => { zoom = !zoom; img.classList.toggle('z', zoom); };
-  stage.onclick = (e) => { if (e.target === stage && !zoom) close(); };
-  paint();
+  lb.querySelectorAll('.lb-pan img').forEach((im) => { im.onclick = () => im.closest('.lb-pan').classList.toggle('z'); });
+  lb.querySelectorAll('.lb-fig')[start]?.scrollIntoView({ block: 'center' });
 }
 
 let open = null;
