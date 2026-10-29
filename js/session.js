@@ -6,16 +6,39 @@ import { readDocs } from './offline.js';
 import { getRotation, sessionForDate, startWorkout } from './workout.js';
 import { navigate } from './router.js';
 import { esc, icon, dayKey } from './ui.js';
-import { loadCatalog, keyOf, ALIASES, toLibEntry } from './catalog.js';
+import { loadCatalog, keyOf, ALIASES, toLibEntry, norm as nz } from './catalog.js';
 import { openExerciseDetail } from './detail.js';
 
 const norm = (s) => String(s || '').trim().toLowerCase();
 
+/** Bibliothèque d'exercices : si le nom exact est inconnu (ex. « Curl à la barre EZ »), on cherche l'exercice du catalogue
+    dont le nom contient tous les mots importants (2 mots minimum, le nom le plus court gagne). */
+class Lib extends Map {
+  constructor(cat) { super(); this.cat = cat; this.memo = new Map(); }
+  get(k) {
+    const v = super.get(k);
+    if (v !== undefined || !k) return v;
+    if (this.memo.has(k)) return this.memo.get(k);
+    const words = nz(k).split(' ').filter((w) => w.length > 2);
+    let best = null;
+    if (words.length >= 2) {
+      for (const e of this.cat) {
+        const n = ' ' + nz(e.n) + ' ';
+        const main = nz(e.n.split('(')[0]).split(' ').filter((w) => w.length > 2);      // « Rowing menton (barre) » → rowing, menton
+        if (words.every((w) => n.includes(w)) && main.every((w) => words.some((x) => x.startsWith(w) || w.startsWith(x))) && (!best || e.n.length < best.n.length)) best = e;
+      }
+    }
+    const r = best ? toLibEntry(best) : undefined;
+    this.memo.set(k, r);
+    return r;
+  }
+}
+
 export async function loadLibrary() {
   const q = query(collection(db, 'exercises'), where('ownerId', '==', getUser().uid));
   const snap = await readDocs(q);
-  const map = new Map();
   const cat = await loadCatalog().catch(() => []);
+  const map = new Lib(cat);
   cat.forEach((e) => {
     const v = toLibEntry(e);
     map.set(keyOf(e.n), v); if (!map.has(keyOf(e.en))) map.set(keyOf(e.en), v);

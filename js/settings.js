@@ -44,7 +44,7 @@ export const RESTS = [60, 90, 120, 180];
 
 export const DEFAULTS = {
   theme: 'aurora', font: 'default', size: 100, spacing: 'normal',
-  accent: '', contrast: false, motion: false, splash: true, sound: true, tone: 'beep', rest: 90, autoRest: true, vibrate: true, warm: WARM_DEFAULT,
+  pseudo: '', accent: '', contrast: false, motion: false, splash: true, sound: true, tone: 'beep', rest: 90, autoRest: true, vibrate: true, warm: WARM_DEFAULT,
   at: 0                       // date de dernière modification (sert à départager local et compte)
 };
 
@@ -60,6 +60,7 @@ function sanitize(o = {}) {
   const size = Number(o.size);
   if (Number.isFinite(size)) s.size = Math.min(140, Math.max(85, Math.round(size / 5) * 5));
   if (typeof o.accent === 'string' && (o.accent === '' || /^#[0-9a-f]{6}$/i.test(o.accent))) s.accent = o.accent.toUpperCase();
+  s.pseudo = typeof o.pseudo === 'string' ? o.pseudo.replace(/\s+/g, ' ').trim().slice(0, 24) : '';
   s.contrast = o.contrast === true;
   s.motion = o.motion === true;
   s.splash = o.splash !== false;
@@ -178,6 +179,14 @@ export function mountAppearance(el) {
             <span>${esc(t.label)}</span>
           </button>`).join('')}
       </div>
+      <div class="field">
+        <span>Couleur d'accent</span>
+        <div class="swatches" role="group" aria-label="Couleur d'accent">
+          ${ACCENTS.map((a) => `
+            <button type="button" class="swatch ${a.v ? '' : 'auto'}" data-set="accent" data-val="${a.v}" aria-pressed="false"
+              aria-label="${esc(a.label)}" title="${esc(a.label)}" ${a.v ? `style="--sw:${a.v}"` : ''}>${a.v ? '' : 'A'}</button>`).join('')}
+        </div>
+      </div>
     </div>
 
     <div class="card stack">
@@ -207,15 +216,7 @@ export function mountAppearance(el) {
     </div>
 
     <div class="card stack">
-      <h3>Couleurs et confort</h3>
-      <div class="field">
-        <span>Couleur d'accent</span>
-        <div class="swatches" role="group" aria-label="Couleur d'accent">
-          ${ACCENTS.map((a) => `
-            <button type="button" class="swatch ${a.v ? '' : 'auto'}" data-set="accent" data-val="${a.v}" aria-pressed="false"
-              aria-label="${esc(a.label)}" title="${esc(a.label)}" ${a.v ? `style="--sw:${a.v}"` : ''}>${a.v ? '' : 'A'}</button>`).join('')}
-        </div>
-      </div>
+      <h3>Confort</h3>
       <label class="switch-row">
         <span>Contraste élevé<small>Textes et bordures plus marqués</small></span>
         <span class="switch"><input type="checkbox" data-bool="contrast"><i></i></span>

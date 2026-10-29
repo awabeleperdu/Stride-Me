@@ -4,6 +4,7 @@ import { loadLibrary } from './session.js';
 import { warmImages } from './offline.js';
 import { navigate } from './router.js';
 import { esc, icon, toast, dayKey, vibrate } from './ui.js';
+import { getSettings, saveSettings } from './settings.js';
 
 const norm = (s) => String(s || '').trim().toLowerCase();
 const fmt = (key, opts) => new Date(key + 'T12:00:00').toLocaleDateString('fr-FR', opts);
@@ -73,19 +74,37 @@ export async function homeView(root) {
         </article>`;
     };
 
+    const hello = () => {
+      const p = getSettings().pseudo;
+      if (!p) return '';
+      const h = new Date().getHours();
+      return `<p class="hello">${h < 5 || h >= 18 ? 'Bonsoir' : 'Salut'} <b>${esc(p)}</b> 👋</p>`;
+    };
+    const asked = () => { try { return localStorage.getItem('pseudoAsked') === '1'; } catch { return true; } };
+    const askName = () => (getSettings().pseudo || asked() ? '' : `
+      <div class="name-ask card">
+        <b>Comment t'appelles-tu ?</b>
+        <div style="display:flex;gap:8px">
+          <input class="input" id="nameIn" maxlength="24" autocomplete="nickname" placeholder="Ton prénom ou pseudo" style="flex:1">
+          <button class="btn" id="nameOk">OK</button>
+        </div>
+        <button class="linkbtn muted" id="nameSkip" type="button">Plus tard</button>
+      </div>`);
+
     root.innerHTML = `
       <div class="home">
         <div class="home-head">
-          <div><p class="muted" id="hDate"></p><h2 id="hTitle"></h2></div>
+          <div>${hello()}<p class="muted" id="hDate"></p><h2 id="hTitle"></h2></div>
           <a class="hist-link" href="#/stats" aria-label="Historique et stats">${icon('chart')}<span>Historique</span></a>
         </div>
+        ${askName()}
         <div class="daystrip" id="strip">
           <span class="strip-pill" id="pill"></span>
           ${keys.map((k, i) => `
-            <button class="chip" data-go="${i}" aria-label="${esc(rel(i))}">
+            <button class="dchip ${sessions[i] ? 'has' : 'off'} ${i === 0 ? 'now' : ''}" data-go="${i}" aria-label="${esc(rel(i))}${sessions[i] ? ' : ' + esc(sessions[i].name) : ' : repos'}">
               <small>${esc(fmt(k, { weekday: 'short' }).replace('.', ''))}</small>
               <b>${new Date(k + 'T12:00:00').getDate()}</b>
-              <i class="${sessions[i] ? 'has' : ''}"></i>
+              <em>${sessions[i] ? esc(String(sessions[i].name).split(/[\s\/·-]+/)[0]) : 'Repos'}</em>
             </button>`).join('')}
         </div>
         <div class="pager" id="pager" tabindex="0" aria-label="Séances de la semaine">
@@ -94,10 +113,20 @@ export async function homeView(root) {
         <p class="swipe-hint muted">← Glisse pour changer de séance →</p>
       </div>`;
 
+    const markAsked = () => { try { localStorage.setItem('pseudoAsked', '1'); } catch {} };
+    root.querySelector('#nameOk')?.addEventListener('click', () => {
+      const v = root.querySelector('#nameIn').value.trim();
+      markAsked();
+      if (v) saveSettings({ pseudo: v });
+      render();
+    });
+    root.querySelector('#nameIn')?.addEventListener('keydown', (e) => { if (e.key === 'Enter') root.querySelector('#nameOk').click(); });
+    root.querySelector('#nameSkip')?.addEventListener('click', () => { markAsked(); render(); });
+
     /* ---------- Pager ---------- */
     const pager = root.querySelector('#pager');
     const cards = [...root.querySelectorAll('.day-card')];
-    const chips = [...root.querySelectorAll('.chip')];
+    const chips = [...root.querySelectorAll('.dchip')];
     const pill = root.querySelector('#pill');
     const hDate = root.querySelector('#hDate');
     const hTitle = root.querySelector('#hTitle');

@@ -179,6 +179,12 @@ export function startWorkout(session) {
   saveDraft();
 }
 
+/* ---- Exercices réductibles + bulles de progression ---- */
+let holdOpen = -1;                                          // exercice qu'on vient de finir : reste ouvert le temps de l'animation
+const exDone = (ex) => ex.sets.length > 0 && ex.sets.every((x) => x.done);
+const curIdx = (st) => { const i = st.exercises.findIndex((e) => !exDone(e)); return i < 0 ? st.exercises.length - 1 : i; };
+const isCol = (ex, i) => holdOpen !== i && (ex.col !== undefined ? ex.col : exDone(ex));
+const started = (st) => st.exercises.some((e) => e.sets.some((x) => x.done));
 const isCardio = (n) => /^cardio/i.test(String(n || '').trim());
 const fmtShort = (d) => new Date(d + 'T12:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
 const num = (v) => { const n = parseFloat(String(v).replace(',', '.')); return Number.isFinite(n) ? n : 0; };
@@ -193,6 +199,28 @@ async function lastPerformances(names) {
     warm = lastWarmReps(hist);
   } catch (e) { console.warn(e); }
   return { perf: out, warm };
+}
+
+const chevSvg = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
+const tickSvg = '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+
+function summaryOf(ex, cardio) {
+  const sets = ex.sets, n = sets.length;
+  const top = sets.reduce((b, x) => (num(x.weight) > num(b.weight) ? x : b), sets[0] || {});
+  if (cardio) return `${n} ${n > 1 ? 'séries' : 'série'} · ${top.reps || 0} min · touche pour modifier`;
+  return `${n} ${n > 1 ? 'séries' : 'série'} · ${nice(num(top.weight))} kg × ${top.reps || 0} · touche pour modifier`;
+}
+
+function bubblesHtml() {
+  if (state.exercises.length < 2) return '';
+  const cur = curIdx(state), C = 2 * Math.PI * 23;
+  const nd = state.exercises.filter(exDone).length;
+  return `<div class="wk-bwrap"><div class="wk-bubbles" role="tablist" aria-label="Exercices de la séance">${state.exercises.map((ex, i) => {
+    const d = exDone(ex), f = ex.sets.filter((x) => x.done).length / Math.max(1, ex.sets.length);
+    return `<button type="button" class="wk-bub ${d ? 'done' : i === cur ? 'cur' : 'todo'}" data-bub="${i}" aria-label="${esc(ex.name)}${d ? ' (fait)' : ''}">
+      <svg viewBox="0 0 54 54" aria-hidden="true"><circle class="tr" cx="27" cy="27" r="23"/><circle class="pg" cx="27" cy="27" r="23" stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - f)}"/></svg>
+      <span>${i + 1}</span><i class="tick">${tickSvg}</i></button>`; }).join('')}</div>
+    <div class="wk-cap"><span>${nd}/${state.exercises.length} exercices terminés</span><span>${nd === state.exercises.length ? 'Séance complète !' : `En cours : ${esc(state.exercises[cur].name)}`}</span></div></div>`;
 }
 
 export async function workoutView(root) {
@@ -224,6 +252,7 @@ export async function workoutView(root) {
     root.innerHTML = `
       <div class="stack wk">
         <div class="row between"><h2 style="margin:0">${esc(state.sessionName)}</h2><span class="badge" id="elapsed"></span></div>
+        ${bubblesHtml()}
 
         <div class="card rest-set">
           <div class="rs-head"><b>Temps de repos</b><span class="muted">entre chaque série</span></div>
@@ -237,13 +266,18 @@ export async function workoutView(root) {
 
         ${state.exercises.map((ex, i) => {
           const L = state.last?.[ex.name], meta = libOf(ex.name), cardio = isCardio(ex.name);
+          const done = exDone(ex), col = isCol(ex, i);
           return `
-          <div class="card ex-card-w" data-ex="${i}">
-            <div class="ex-head">
+          <div class="card ex-card-w ${done ? 'ex-done' : ''} ${col ? 'col' : ''} ${i === curIdx(state) && !done ? 'ex-cur' : ''}" data-ex="${i}">
+            <div class="ex-head" data-act="toggle">
               ${meta.imageUrl ? `<img class="ex-thumb" src="${esc(meta.imageUrl)}" alt="" draggable="false">` : `<span class="ex-thumb ph">${icon('dumbbell')}</span>`}
               <div class="ex-title"><h3>${esc(ex.name)}</h3>${meta.muscleGroup ? `<small class="muted">${esc(meta.muscleGroup)}</small>` : ''}</div>
+              ${done ? '<span class="ex-fait">Fait</span>' : ''}
               <button class="btn ghost sm" data-act="detail">Détail</button>
+              <button type="button" class="ex-chev" data-act="toggle" aria-label="Réduire ou ouvrir l'exercice">${chevSvg}</button>
             </div>
+            <p class="ex-sum">${esc(summaryOf(ex, cardio))}</p>
+            <div class="ex-body"><div>
             ${ex.plan ? `<div class="plan-line"><b>${esc(ex.plan.s)} × ${esc(ex.plan.r)}</b>${ex.plan.t ? ` · ${esc(ex.plan.t)}` : ''}${ex.plan.m ? `<small>${esc(ex.plan.m)}</small>` : ''}${ex.plan.alt ? `<small>Alternative : ${esc(ex.plan.alt)}</small>` : ''}</div>` : ''}
             ${L ? `
               <div class="last-box">
@@ -264,6 +298,7 @@ export async function workoutView(root) {
                 <button class="set-check" aria-label="Valider la série">✓</button>
               </div>`; }).join('')}
             <button class="btn ghost block add-set" style="margin-top:12px">${icon('plus')} Série</button>
+            </div></div>
           </div>`; }).join('')}
 
         <button type="button" class="btn ghost block" data-act="add-ex">${icon('plus')} Ajouter un exercice</button>
@@ -279,6 +314,10 @@ export async function workoutView(root) {
         </div>
       </div>`;
     updateElapsed();
+    const tb = document.querySelector('.topbar');
+    if (tb) root.style.setProperty('--tb', tb.offsetHeight + 'px');
+    const row = root.querySelector('.wk-bubbles'), cb = row?.querySelector('.cur');
+    if (row && cb) row.scrollLeft = cb.offsetLeft - row.clientWidth / 2 + cb.offsetWidth / 2;
     window.scrollTo(0, scroll);
   };
 
@@ -291,6 +330,22 @@ export async function workoutView(root) {
   const elapsedTimer = setInterval(updateElapsed, 30000);
 
   draw();
+
+  /* ---- Reprise : on arrive directement sur l'exercice en cours ---- */
+  const goTo = (i, smooth, pulse) => {
+    const el = root.querySelector(`[data-ex="${i}"]`);
+    if (!el) return;
+    el.scrollIntoView({ behavior: smooth ? 'smooth' : 'instant', block: 'start' });
+    if (pulse) { el.classList.add('pulse'); setTimeout(() => el.classList.remove('pulse'), 1300); }
+  };
+  let userScrolled = false;
+  const mark = () => { userScrolled = true; };
+  window.addEventListener('wheel', mark, { passive: true });
+  window.addEventListener('touchmove', mark, { passive: true });
+  if (started(state)) {
+    setTimeout(() => goTo(curIdx(state), false, true), 80);
+    setTimeout(() => { if (!userScrolled) goTo(curIdx(state), false, false); }, 600);   // après le chargement des photos
+  }
 
   /* ---- Ajouter un exercice en cours de séance : bibliothèque / cardio / nom libre, puis « cette séance seulement » ou « toujours » ---- */
   const addExercise = async (name, scope) => {
@@ -341,6 +396,8 @@ export async function workoutView(root) {
 
   root.onclick = (e) => {
     if (e.target.closest('[data-act="add-ex"]')) { addExerciseFlow(); return; }
+    const bub = e.target.closest('[data-bub]');
+    if (bub) { goTo(Number(bub.dataset.bub), true, false); vibrate(6); return; }
     if (e.target.closest('.warm-card')) { warmClick(e, state.warm, { save: saveDraft, redraw: draw, vibrate, lastReps: state.lastWarm || {} }); return; }
     const exEl = e.target.closest('[data-ex]');
     const exIdx = exEl ? Number(exEl.dataset.ex) : null;
@@ -363,6 +420,12 @@ export async function workoutView(root) {
       return;
     }
 
+    if (exEl && !e.target.closest('[data-act="detail"]') && (e.target.closest('.ex-chev') || (e.target.closest('.ex-head') && !e.target.closest('button')) || (exEl.classList.contains('col') && e.target.closest('.ex-sum')))) {
+      const ex = state.exercises[exIdx];
+      exEl.classList.toggle('col');
+      ex.col = exEl.classList.contains('col');
+      saveDraft(); vibrate(6); return;
+    }
     if (e.target.closest('[data-act="detail"]')) {
       const name = state.exercises[exIdx].name, m = libOf(name);
       openExerciseDetail({ ...m, name, images: m.images || (m.imageUrl ? [m.imageUrl] : []) });
@@ -381,11 +444,22 @@ export async function workoutView(root) {
         if (s.weight === '' && p) s.weight = String(p.weight);
         if (s.reps === '' && p) s.reps = String(p.reps);
       }
+      const exo = state.exercises[exIdx];
+      const finished = s.done && exDone(exo);
+      if (finished) { exo.col = undefined; holdOpen = exIdx; }      // exercice terminé : il se réduit juste après, puis on passe au suivant
       saveDraft();
       draw();
       if (s.done) {
         root.querySelector(`[data-ex="${exIdx}"] [data-set="${j}"]`)?.classList.add('pop'); vibrate(12);
         if (getSettings().autoRest !== false) startRest(state.restSeconds, state.exercises[exIdx].name);
+      }
+      if (finished) {
+        setTimeout(() => {
+          holdOpen = -1;
+          root.querySelector(`[data-ex="${exIdx}"]`)?.classList.add('col');
+          const bub = root.querySelector(`[data-bub="${exIdx}"]`); bub?.classList.add('just');
+          setTimeout(() => { draw(); goTo(curIdx(state), true, false); }, 420);
+        }, 650);
       }
     } else if (e.target.closest('.add-set')) {
       const last = state.exercises[exIdx].sets.at(-1);
@@ -407,7 +481,7 @@ export async function workoutView(root) {
     saveDraft();
   };
 
-  return { unmount() { clearInterval(elapsedTimer); root.onclick = null; root.oninput = null; } };
+  return { unmount() { clearInterval(elapsedTimer); root.onclick = null; root.oninput = null; window.removeEventListener('wheel', mark); window.removeEventListener('touchmove', mark); holdOpen = -1; } };
 }
 
 export function discard() {

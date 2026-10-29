@@ -17,9 +17,10 @@ import { trackUsage, isBlocked, isAdmin } from './track.js';
 import { initOffline } from './offline.js';
 import { mountDemoSeed, demoView } from './demoseed.js';
 import { showAnnouncements, mountAnnouncementsCard, startBanners } from './announcements.js';
-import { applySettings, getSettings, loadRemoteSettings, mountAppearance } from './settings.js';
+import { applySettings, getSettings, saveSettings, loadRemoteSettings, mountAppearance } from './settings.js';
 import { esc, toast } from './ui.js';
 import { initTimer } from './timer.js';
+import { initPip } from './pip.js';
 
 // Réglages locaux appliqués tout de suite (thème, police, taille…) ; ceux du compte arrivent après connexion.
 applySettings(getSettings());
@@ -33,18 +34,17 @@ async function profileView(root) {
   root.innerHTML = `
     <div class="stack">
       <h2>Profil</h2>
+      <div class="card stack">
+        <h3>Ton pseudo</h3>
+        <p class="muted">Comment veux-tu qu'on t'appelle ? Il s'affiche sur l'accueil.</p>
+        <div style="display:flex;gap:8px">
+          <input class="input" id="pseudo" maxlength="24" autocomplete="nickname" placeholder="Ton prénom ou pseudo" value="${esc(getSettings().pseudo)}" style="flex:1">
+          <button class="btn" id="pseudoSave">Enregistrer</button>
+        </div>
+      </div>
       <div id="adminLink"></div>
       <div id="demoSeed"></div>
       <div id="annCard"></div>
-      <form class="card stack" id="metrics">
-        <h3>Mesures actuelles</h3>
-        <div class="grid-2">
-          <input class="input" name="weight" inputmode="decimal" placeholder="Poids (kg)" aria-label="Poids en kilogrammes" value="${esc(data.metrics?.weight ?? '')}">
-          <input class="input" name="height" inputmode="numeric" placeholder="Taille (cm)" aria-label="Taille en centimètres" value="${esc(data.metrics?.height ?? '')}">
-        </div>
-        <button class="btn block" type="submit">Enregistrer</button>
-      </form>
-
       <h2 class="section-title">Apparence et réglages</h2>
       <div class="stack" id="appearance"></div>
 
@@ -70,12 +70,10 @@ async function profileView(root) {
     if (ok) root.querySelector('#adminLink').innerHTML = '<a class="card adm-link" href="#/admin"><span><b>Espace administrateur</b><small class="muted">Comptes, activité, appareils</small></span><span aria-hidden="true">›</span></a>';
   });
 
-  root.querySelector('#metrics').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const fd = new FormData(e.currentTarget);
-    const num = (v) => (v === '' ? null : Number(String(v).replace(',', '.')) || null);
-    await queued(setDoc(ref, { metrics: { weight: num(fd.get('weight')), height: num(fd.get('height')) } }, { merge: true }));
-    toast('Mesures enregistrées');
+  root.querySelector('#pseudoSave').addEventListener('click', () => {
+    const v = root.querySelector('#pseudo').value;
+    const s = saveSettings({ pseudo: v });
+    toast(s.pseudo ? `Enchanté, ${s.pseudo} !` : 'Pseudo effacé');
   });
   root.querySelector('#csv').addEventListener('click', exportCSV);
   root.querySelector('#google')?.addEventListener('click', async () => {
@@ -122,6 +120,7 @@ async function boot() {
   if (me) trackUsage(me);       // dernière activité + appareil (voir Profil › Mes appareils)
 
   await loadRemoteSettings();   // retrouve ses réglages d'un autre appareil
+  initPip(toast);               // bulle flottante du minuteur (si le téléphone sait faire)
   initTimer();                  // minuteur de repos global (reprend après navigation ou rechargement)
 
   register('/', homeView);

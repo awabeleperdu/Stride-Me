@@ -43,6 +43,10 @@ export function matchByName(list, name) {
 // Convertit une entrée en document `exercises` (aucune image uploadée : imageUrl pointe vers le dossier du repo).
 // Noms courants (suggestions du planning) → exercice du catalogue, pour afficher l'image sans rien configurer.
 export const ALIASES = { 'développé couché': 'Barbell Bench Press - Medium Grip', 'développé incliné haltères': 'Incline Dumbbell Press', 'développé militaire': 'Standing Military Press', 'élévations latérales': 'Side Lateral Raise', 'dips': 'Dips - Chest Version', 'pompes': 'Pushups', 'tractions': 'Pullups', 'rowing barre': 'Bent Over Barbell Row', 'tirage horizontal': 'Seated Cable Rows', 'tirage vertical': 'Wide-Grip Lat Pulldown', 'curl biceps': 'Barbell Curl', 'curl marteau': 'Hammer Curls', 'triceps poulie': 'Triceps Pushdown', 'barre au front': 'EZ-Bar Skullcrusher', 'squat': 'Barbell Squat', 'presse à cuisses': 'Leg Press', 'fentes': 'Dumbbell Lunges', 'leg curl': 'Lying Leg Curls', 'leg extension': 'Leg Extensions', 'soulevé de terre roumain': 'Romanian Deadlift', 'mollets debout': 'Standing Calf Raises', 'gainage': 'Plank', 'crunch': 'Crunches',
+  // Programme intégré (code 2000) : noms de machines et d'exercices d'une séance sur mesure
+  'iso-lateral incline press': 'Leverage Incline Chest Press', 'chest press': 'Leverage Chest Press', 'pec fly': 'Butterfly',
+  'extension poulie au-dessus de la tête': 'Cable Rope Overhead Triceps Extension', 'curl au pupitre': 'Preacher Curl', 'curl à la barre': 'Barbell Curl',
+  'développé assis': 'Machine Shoulder (Military) Press', 'crunch banc décliné': 'Decline Crunch',
   // Programme intégré (code 2008)
   'développé incliné': 'Incline Dumbbell Press', 'pec deck': 'Butterfly', 'extension triceps corde': 'Triceps Pushdown - Rope Attachment', 'extension triceps au-dessus de la tête': 'Cable Rope Overhead Triceps Extension', 'rowing assis': 'Seated Cable Rows', 'face pull': 'Face Pull', 'curl incliné': 'Incline Dumbbell Curl', 'flexions des poignets': 'Palms-Up Dumbbell Wrist Curl Over A Bench', 'crunch poulie': 'Cable Crunch', 'shrugs': 'Dumbbell Shrug' };
 export const keyOf = (s) => String(s || '').trim().toLowerCase();
