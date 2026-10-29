@@ -66,9 +66,9 @@ html[data-theme="stride"] .badge.accent { background: rgba(34, 211, 238, .16); c
 
 /* Bande des jours : parallélogrammes */
 html[data-theme="stride"] .daystrip { border-radius: 0; background: #121922; border: 0; padding: 6px 10px; clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%); }
-html[data-theme="stride"] .strip-pill { border-radius: 0; background: var(--accent); clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%); }
-html[data-theme="stride"] .chip { border-radius: 0; }
-html[data-theme="stride"] .daystrip .chip.on { color: var(--accent-contrast); background: transparent; }
+html[data-theme="stride"] .strip-pill { border-radius: 0; background: var(--accent); clip-path: polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%); }
+html[data-theme="stride"] .dchip { border-radius: 0; }
+html[data-theme="stride"] .dchip em { border-radius: 0; }
 html[data-theme="stride"] .hist-link { border-radius: 0; background: #182330; border: 0; clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%); }
 
 /* Contrôles segmentés, champs, filtres du catalogue */

@@ -31,23 +31,41 @@
 .det-imgs img{width:100%;aspect-ratio:3/2;object-fit:cover;border-radius:14px;background:#8882;display:block}
 .det-imgs figcaption{position:absolute;left:10px;bottom:10px;background:rgba(0,0,0,.6);color:#fff;font-size:.75rem;padding:3px 10px;border-radius:99px}
 .det-chips{display:flex;gap:6px;flex-wrap:wrap}
-.det-steps{margin:0;padding-left:1.3em;display:flex;flex-direction:column;gap:10px;line-height:1.5}
+.det-grab{width:40px;height:4px;border-radius:4px;background:currentColor;opacity:.2;margin:8px auto 0}
+.det-head{position:sticky;top:0}
+.det-gal{display:flex;flex-direction:column;gap:8px}
+.det-dots{display:flex;gap:6px;justify-content:center}
+.det-dots i{width:7px;height:7px;border-radius:50%;background:currentColor;opacity:.22;transition:all .2s}
+.det-dots i.on{opacity:1;width:18px;border-radius:4px;background:var(--accent,#0A8F9C)}
+.det-card{border:1px solid var(--divider,#8883);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:10px;background:color-mix(in srgb,currentColor 3%,transparent)}
+.det-card h4{margin:0}
+.det-perf{display:flex;flex-direction:column;gap:10px}
+.det-perf.empty{gap:4px}.det-perf.empty small{opacity:.7;line-height:1.4}
+.perf-stats{display:flex;gap:8px}
+.perf-stats>div{flex:1;border-radius:12px;padding:10px;background:color-mix(in srgb,currentColor 6%,transparent);display:flex;flex-direction:column;gap:2px}
+.perf-stats small{font-size:.7rem;opacity:.65;text-transform:uppercase;letter-spacing:.08em}
+.perf-stats b{font-size:1.05rem}.perf-stats b.up{color:#2fbf71}.perf-stats b.down{color:#e5604d}
+.spark{width:100%;height:46px;overflow:visible}
+.spark polyline{fill:none;stroke:var(--accent,#0A8F9C);stroke-width:2.2;stroke-linejoin:round;stroke-linecap:round;vector-effect:non-scaling-stroke}
+.spark-cap{margin-top:-6px;opacity:.6;font-size:.72rem}
+.perf-last{margin:0;display:flex;flex-direction:column;gap:6px}
+.perf-last small{opacity:.65}
+.perf-last span{display:flex;flex-wrap:wrap;gap:6px}
+.perf-last i{font-style:normal;font-size:.82rem;padding:4px 10px;border-radius:99px;background:color-mix(in srgb,var(--accent,#0A8F9C) 16%,transparent)}
+.det-steps{margin:0;padding:0;list-style:none;counter-reset:st;display:flex;flex-direction:column;gap:12px;line-height:1.5}
+.det-steps li{counter-increment:st;position:relative;padding-left:38px;min-height:28px}
+.det-steps li::before{content:counter(st);position:absolute;left:0;top:0;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:.8rem;background:var(--accent,#0A8F9C);color:var(--accent-contrast,#fff)}
 .bd{display:flex;justify-content:center;gap:6px}
 .bd figure{margin:0;text-align:center}
-.bd svg{height:320px;width:auto}
+.bd svg{height:320px;width:auto;overflow:visible}
 .bd figcaption{font-size:.75rem;opacity:.65}
-.bd-base,.bd-sec,.bd-pri,.bd-head{stroke:rgba(0,0,0,.55);stroke-width:1.4;stroke-linejoin:round}
-.bd-base{fill:#69727b}
-.bd-head{fill:#3d444b}
-.bd-sec{fill:#F2A04A}
-.bd-pri{fill:#E4411F;stroke:#6d1608}
-.bd-line{fill:none;stroke:rgba(255,255,255,.35);stroke-width:1.6}
-[data-theme="classic"] .bd-base{fill:#aab2b9}
-[data-theme="classic"] .bd-head{fill:#7d868e}
-[data-theme="classic"] .bd-line{stroke:rgba(0,0,0,.35)}
+.bd-sil{fill:#161c23;stroke:#161c23;stroke-width:14;stroke-linejoin:round}
+[data-theme="classic"] .bd-sil{fill:#2b333b;stroke:#2b333b}
+.bd-base,.bd-sec,.bd-pri{stroke:rgba(0,0,0,.5);stroke-width:2;stroke-linejoin:round}
+.bd-pri{stroke-width:3;stroke:rgba(70,10,0,.65)}
 .bd-legend{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;font-size:.9rem}
 .bd-legend i{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;vertical-align:-1px}
-.bd-legend .pri{background:#E8452C}.bd-legend .sec{background:#F2A65A}
+.bd-legend .pri{background:#E4411F}.bd-legend .sec{background:#F2A04A}
 
 .cat-ph{display:block;width:64px;height:64px;border-radius:8px;background:linear-gradient(135deg,#8883,#8881)}
 .sh-row{gap:10px}.sh-main{flex:1;min-width:0;display:flex;flex-direction:column}
