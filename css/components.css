@@ -444,3 +444,57 @@ textarea.input { padding: 10px 12px; min-height: 80px; }
 html[data-motion="off"] .ex-body, html[data-motion="off"] .wk-bub { transition: none; }
 .ex-head .ex-title h3 { white-space: normal; overflow: visible; text-overflow: clip; line-height: 1.2; }
 .ex-card-w.ex-done:not(.col) .ex-head .btn { display: none; }
+
+/* ---------- Intro (1re ouverture) ---------- */
+.intro { position: fixed; inset: 0; z-index: 9999; display: flex; flex-direction: column; gap: 14px; padding: calc(env(safe-area-inset-top) + 16px) 16px calc(env(safe-area-inset-bottom) + 16px); background: var(--bg); color: var(--text); overflow: auto; animation: introIn .25s; }
+.intro.out { opacity: 0; transition: opacity .25s; }
+@keyframes introIn { from { opacity: 0 } to { opacity: 1 } }
+.intro-head { display: flex; align-items: center; gap: 12px; min-height: 40px; }
+.intro-bk { width: 40px; height: 40px; border-radius: 50%; background: var(--card); border: 1px solid var(--card-border); color: var(--text); font-size: 20px; display: grid; place-items: center; }
+.intro-bk.off { visibility: hidden; }
+.intro-bar { flex: 1; height: 5px; border-radius: 3px; background: var(--divider); overflow: hidden; }
+.intro-bar i { display: block; height: 100%; background: var(--accent); border-radius: 3px; transition: width .35s; }
+.intro-head small { min-width: 28px; text-align: right; color: var(--text-muted); font-weight: 700; font-size: 12px; }
+.intro-step { flex: 1; display: flex; flex-direction: column; gap: 14px; animation: introStep .3s; }
+@keyframes introStep { from { opacity: 0; transform: translateX(14px) } to { opacity: 1; transform: none } }
+.intro h1 { margin: 0; font-size: 30px; line-height: 1.1; letter-spacing: -.02em; }
+.intro-hero { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 16px; }
+.intro-logo { width: 88px; height: 88px; border-radius: 24px; display: grid; place-items: center; background: var(--accent); color: var(--accent-contrast); }
+.intro-logo svg { width: 50px; height: 50px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.intro-perks { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: 10px; font-weight: 600; font-size: 14px; }
+.intro-perks i { display: inline-grid; place-items: center; width: 34px; height: 34px; margin-right: 12px; border-radius: 11px; background: var(--card); border: 1px solid var(--card-border); font-style: normal; }
+.intro-in { font-size: 20px; font-weight: 700; padding: 16px; }
+.intro-prev { display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 18px; background: var(--card); border: 1px dashed var(--card-border); }
+.intro-prev b { display: block; font-size: 18px; }
+.intro-av { width: 46px; height: 46px; border-radius: 50%; background: var(--accent); color: var(--accent-contrast); display: grid; place-items: center; font-weight: 800; font-size: 20px; flex: none; }
+.intro-themes { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.intro-th { display: flex; flex-direction: column; gap: 8px; padding: 10px; border-radius: 18px; border: 2px solid var(--card-border); background: var(--card); color: var(--text); text-align: left; font-weight: 700; }
+.intro-th[aria-pressed="true"], .intro-rest[aria-pressed="true"] { border-color: var(--accent); }
+.intro-th .tile-prev { display: block; height: 64px; border-radius: 12px; border: 1px solid; position: relative; }
+.intro-rests { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.intro-rest { padding: 22px 0; border-radius: 18px; border: 2px solid var(--card-border); background: var(--card); color: var(--text); font-size: 20px; font-weight: 800; }
+.intro-rest[aria-pressed="true"] { background: var(--accent); color: var(--accent-contrast); }
+.intro-check { width: 84px; height: 84px; border-radius: 50%; background: var(--success); color: #04140E; display: grid; place-items: center; font-size: 42px; font-weight: 800; }
+.intro-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.intro-chips span { padding: 8px 13px; border-radius: 999px; background: var(--card); border: 1px solid var(--card-border); font-size: 13px; font-weight: 700; }
+.intro-foot { display: flex; flex-direction: column; gap: 6px; align-items: stretch; text-align: center; }
+.intro-foot .btn[disabled] { opacity: .4; }
+
+/* ---------- Profil : menu par catégories ---------- */
+.pro-head { display: flex; align-items: center; gap: 14px; padding: 16px; border-radius: 22px; background: var(--card); border: 1px solid var(--card-border); }
+.pro-head h2 { margin: 0; }
+.pro-av { width: 58px; height: 58px; border-radius: 50%; background: var(--accent); color: var(--accent-contrast); display: grid; place-items: center; font-weight: 800; font-size: 25px; flex: none; }
+.psec { margin: 6px 4px -6px; font-size: 12px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--text-muted); }
+.plist { display: flex; flex-direction: column; border-radius: 20px; overflow: hidden; border: 1px solid var(--card-border); background: var(--card); }
+.plist > * + *, .plist #adminRow .prow { border-top: 1px solid var(--divider); }
+.prow { display: flex; align-items: center; gap: 13px; padding: 14px; width: 100%; text-align: left; color: var(--text); text-decoration: none; background: none; border: 0; border-radius: 0; font: inherit; cursor: pointer; }
+.prow:active { background: var(--input-bg); }
+.prow-ic { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; flex: none; }
+.prow-ic svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.prow-tx { display: flex; flex-direction: column; min-width: 0; }
+.prow-tx b { font-size: 15px; }
+.prow-tx small { color: var(--text-muted); font-size: 12px; }
+.prow-val { margin-left: auto; color: var(--text-muted); font-size: 13px; font-weight: 600; white-space: nowrap; }
+.prow-go { color: var(--text-muted); font-size: 20px; }
+.pback { align-self: flex-start; padding: 9px 15px 9px 11px; border-radius: 12px; background: var(--card); border: 1px solid var(--card-border); color: var(--text); font-weight: 700; font-size: 14px; }
+.intro-foot .linkbtn { background: none; border: 0; padding: 10px; font: inherit; font-size: .85rem; color: var(--text-muted); cursor: pointer; }
