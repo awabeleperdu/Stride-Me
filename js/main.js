@@ -17,7 +17,8 @@ import { trackUsage, isBlocked, isAdmin } from './track.js';
 import { initOffline } from './offline.js';
 import { mountDemoSeed, demoView } from './demoseed.js';
 import { showAnnouncements, mountAnnouncementsCard, startBanners } from './announcements.js';
-import { applySettings, getSettings, saveSettings, loadRemoteSettings, mountAppearance } from './settings.js';
+import { applySettings, getSettings, saveSettings, loadRemoteSettings, mountAppearance, THEMES } from './settings.js';
+import { needsIntro, showIntro } from './intro.js';
 import { esc, toast } from './ui.js';
 import { initTimer } from './timer.js';
 import { initPip } from './pip.js';
@@ -25,62 +26,121 @@ import { initPip } from './pip.js';
 // Réglages locaux appliqués tout de suite (thème, police, taille…) ; ceux du compte arrivent après connexion.
 applySettings(getSettings());
 
-/* ---------- Profil ---------- */
+/* ---------- Profil : un menu par catégories, chaque catégorie a sa sous-page ---------- */
+const IC = {
+  look:  '<circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18z" fill="currentColor"/>',
+  sess:  '<circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/>',
+  data:  '<ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6"/>',
+  acc:   '<circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/>',
+  admin: '<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/>'
+};
+let profilePop = null;
+const restLabel = (r) => (r >= 120 ? `${r / 60} min` : `${r} s`);
+
 async function profileView(root) {
   const user = getUser();
-  const ref = doc(db, 'users', user.uid);
-  const data = (await getDoc(ref)).data() || {};
+  let admin = false;
 
-  root.innerHTML = `
-    <div class="stack">
-      <h2>Profil</h2>
-      <div class="card stack">
-        <h3>Ton pseudo</h3>
-        <p class="muted">Comment veux-tu qu'on t'appelle ? Il s'affiche sur l'accueil.</p>
-        <div style="display:flex;gap:8px">
-          <input class="input" id="pseudo" maxlength="24" autocomplete="nickname" placeholder="Ton prénom ou pseudo" value="${esc(getSettings().pseudo)}" style="flex:1">
-          <button class="btn" id="pseudoSave">Enregistrer</button>
+  const row = (key, color, icon, title, hint, val, href) => `
+    <${href ? `a href="${href}"` : `button type="button" data-sub="${key}"`} class="prow">
+      <span class="prow-ic" style="background:${color}22;color:${color}"><svg viewBox="0 0 24 24" aria-hidden="true">${icon}</svg></span>
+      <span class="prow-tx"><b>${title}</b><small>${hint}</small></span>
+      <span class="prow-val">${val}</span><span class="prow-go" aria-hidden="true">›</span>
+    </${href ? 'a' : 'button'}>`;
+
+  const hub = () => {
+    const s = getSettings();
+    const name = s.pseudo || 'Toi';
+    const theme = THEMES.find((t) => t.id === s.theme);
+    root.innerHTML = `
+      <div class="stack">
+        <div class="pro-head">
+          <div class="pro-av">${esc(name[0].toUpperCase())}</div>
+          <div><h2>${esc(s.pseudo || 'Profil')}</h2><small class="muted">${user.isAnonymous ? 'Session anonyme' : esc(user.email || '')}</small></div>
         </div>
-      </div>
-      <div id="adminLink"></div>
-      <div id="demoSeed"></div>
-      <div id="annCard"></div>
-      <h2 class="section-title">Apparence et réglages</h2>
-      <div class="stack" id="appearance"></div>
+        <div class="psec">Personnalisation</div>
+        <div class="plist">
+          ${row('look', '#22D3EE', IC.look, 'Apparence', 'Thème, police, confort', esc(theme ? theme.label : ''))}
+          ${row('sess', '#FFB347', IC.sess, 'Séance', 'Repos, sonnerie, échauffement', restLabel(s.rest))}
+        </div>
+        <div class="psec">Données et compte</div>
+        <div class="plist">
+          ${row('data', '#4C8DFF', IC.data, 'Données', 'Export de l\'historique', '')}
+          ${row('acc', '#C084FC', IC.acc, 'Compte', 'Pseudo, appareils, annonces', user.isAnonymous ? 'Anonyme' : 'Google')}
+          <span id="adminRow"></span>
+        </div>
+        <small class="muted" style="text-align:center">Stride Me</small>
+      </div>`;
+    if (admin) root.querySelector('#adminRow').outerHTML = row('admin', '#FF6B4A', IC.admin, 'Espace administrateur', 'Comptes, activité, appareils', '', '#/admin');
+    window.scrollTo(0, 0);
+  };
 
-      <div id="devices"></div>
-      <div class="card stack">
-        <h3>Données</h3>
-        <button class="btn ghost block" id="csv">Exporter l'historique (CSV)</button>
-      </div>
-      <div class="card stack">
-        <h3>Compte</h3>
-        <p class="muted">${user.isAnonymous ? 'Session anonyme — lie un compte Google pour retrouver tes données ailleurs.' : esc(user.email || '')}</p>
-        ${user.isAnonymous ? '<button class="btn block" id="google">Se connecter avec Google</button>' : ''}
-        <button class="btn ghost block" id="logout">Se déconnecter</button>
-      </div>
-    </div>`;
+  const sub = (key) => {
+    const titles = { look: 'Apparence', sess: 'Séance', data: 'Données', acc: 'Compte' };
+    root.innerHTML = `
+      <div class="stack">
+        <button type="button" class="pback" id="pBack">‹ Profil</button>
+        <h2>${titles[key]}</h2>
+        <div class="stack" id="pBody"></div>
+      </div>`;
+    const body = root.querySelector('#pBody');
+    if (key === 'look') {
+      mountAppearance(body, ['theme', 'font', 'comfort']);
+    } else if (key === 'sess') {
+      mountAppearance(body, ['session', 'warm']);
+    } else if (key === 'data') {
+      body.innerHTML = `
+        <div class="card stack"><h3>Historique</h3><button class="btn ghost block" id="csv">Exporter l'historique (CSV)</button></div>
+        <div id="demoSeed"></div>`;
+      body.querySelector('#csv').addEventListener('click', exportCSV);
+      mountDemoSeed(body.querySelector('#demoSeed'));
+    } else {
+      body.innerHTML = `
+        <div class="card stack">
+          <h3>Ton pseudo</h3>
+          <p class="muted">Il s'affiche sur l'accueil.</p>
+          <div style="display:flex;gap:8px">
+            <input class="input" id="pseudo" maxlength="24" autocomplete="nickname" placeholder="Ton prénom ou pseudo" value="${esc(getSettings().pseudo)}" style="flex:1">
+            <button class="btn" id="pseudoSave">Enregistrer</button>
+          </div>
+        </div>
+        <div id="devices"></div>
+        <div id="annCard"></div>
+        <div class="card stack">
+          <h3>Connexion</h3>
+          <p class="muted">${user.isAnonymous ? 'Session anonyme — lie un compte Google pour retrouver tes données ailleurs.' : esc(user.email || '')}</p>
+          ${user.isAnonymous ? '<button class="btn block" id="google">Se connecter avec Google</button>' : ''}
+          <button class="btn ghost block" id="logout">Se déconnecter</button>
+        </div>`;
+      mountDevices(body.querySelector('#devices')).catch(console.warn);
+      mountAnnouncementsCard(body.querySelector('#annCard'));
+      body.querySelector('#pseudoSave').addEventListener('click', () => {
+        const s = saveSettings({ pseudo: body.querySelector('#pseudo').value });
+        toast(s.pseudo ? `Enchanté, ${s.pseudo} !` : 'Pseudo effacé');
+      });
+      body.querySelector('#google')?.addEventListener('click', async () => {
+        try { await signInWithGoogle(); toast('Compte lié'); profileView(root); }
+        catch (err) { console.error(err); toast('Connexion annulée'); }
+      });
+      body.querySelector('#logout').addEventListener('click', logout);
+    }
+    root.querySelector('#pBack').addEventListener('click', () => history.back());
+    window.scrollTo(0, 0);
+  };
 
-  mountAppearance(root.querySelector('#appearance'));
-  mountDevices(root.querySelector('#devices')).catch(console.warn);
-  mountDemoSeed(root.querySelector('#demoSeed'));
-  mountAnnouncementsCard(root.querySelector('#annCard'));
-  // Lien visible uniquement pour les administrateurs (document admins/<uid>) ; les autres ne voient rien.
-  isAdmin(user).then((ok) => {
-    if (ok) root.querySelector('#adminLink').innerHTML = '<a class="card adm-link" href="#/admin"><span><b>Espace administrateur</b><small class="muted">Comptes, activité, appareils</small></span><span aria-hidden="true">›</span></a>';
-  });
+  // Le bouton « retour » du téléphone revient au menu du Profil au lieu de quitter la page.
+  const paint = () => { const k = history.state && history.state.psub; k ? sub(k) : hub(); };
+  if (profilePop) window.removeEventListener('popstate', profilePop);     // un seul écouteur, même si on revient sur le Profil
+  profilePop = () => { if (!root.querySelector('.pro-head, #pBack')) return; paint(); };
+  window.addEventListener('popstate', profilePop);
+  root.onclick = (e) => {
+    const b = e.target.closest('[data-sub]');
+    if (b) { history.pushState({ psub: b.dataset.sub }, ''); paint(); }
+  };
 
-  root.querySelector('#pseudoSave').addEventListener('click', () => {
-    const v = root.querySelector('#pseudo').value;
-    const s = saveSettings({ pseudo: v });
-    toast(s.pseudo ? `Enchanté, ${s.pseudo} !` : 'Pseudo effacé');
-  });
-  root.querySelector('#csv').addEventListener('click', exportCSV);
-  root.querySelector('#google')?.addEventListener('click', async () => {
-    try { await signInWithGoogle(); toast('Compte lié'); profileView(root); }
-    catch (err) { console.error(err); toast('Connexion annulée'); }
-  });
-  root.querySelector('#logout').addEventListener('click', logout);
+  paint();
+  // Lien visible uniquement pour les administrateurs (document admins/<uid>).
+  isAdmin(user).then((ok) => { if (ok && root.querySelector('#adminRow')) { admin = true; hub(); } }).catch(() => {});
 }
 
 /* ---------- Démarrage ---------- */
@@ -120,6 +180,7 @@ async function boot() {
   if (me) trackUsage(me);       // dernière activité + appareil (voir Profil › Mes appareils)
 
   await loadRemoteSettings();   // retrouve ses réglages d'un autre appareil
+  if (me && needsIntro()) { hideSplash(); await showIntro(); }   // 1re ouverture : pseudo, thème, repos
   initPip(toast);               // bulle flottante du minuteur (si le téléphone sait faire)
   initTimer();                  // minuteur de repos global (reprend après navigation ou rechargement)
 

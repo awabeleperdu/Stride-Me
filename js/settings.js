@@ -164,11 +164,11 @@ export async function loadRemoteSettings() {
 /* ---------------------------------------------------------
    Interface : cartes « Apparence » et « Séance » du Profil
    --------------------------------------------------------- */
-export function mountAppearance(el) {
+export function mountAppearance(el, parts) {
   const s = () => cur;
 
   el.innerHTML = `
-    <div class="card stack">
+    <div class="card stack" data-part="theme">
       <h3>Thème</h3>
       <div class="theme-tiles" role="group" aria-label="Thème">
         ${THEMES.map((t) => `
@@ -189,7 +189,7 @@ export function mountAppearance(el) {
       </div>
     </div>
 
-    <div class="card stack">
+    <div class="card stack" data-part="font">
       <h3>Police</h3>
       <div class="font-list" role="group" aria-label="Police">
         ${FONTS.map((f) => `
@@ -215,7 +215,7 @@ export function mountAppearance(el) {
       <p class="preview" aria-label="Aperçu">Développé couché · 4 séries × 8 reps<br><span class="muted">Charge 70 kg — repos 90 s</span></p>
     </div>
 
-    <div class="card stack">
+    <div class="card stack" data-part="comfort">
       <h3>Confort</h3>
       <label class="switch-row">
         <span>Contraste élevé<small>Textes et bordures plus marqués</small></span>
@@ -231,12 +231,12 @@ export function mountAppearance(el) {
       </label>
     </div>
 
-    <div class="card stack">
+    <div class="card stack" data-part="warm">
       <h3>Échauffement</h3>
       <div id="warmHost" class="stack"></div>
     </div>
 
-    <div class="card stack">
+    <div class="card stack" data-part="session">
       <h3>Séance</h3>
       <div class="field">
         <span>Temps de repos par défaut</span>
@@ -266,7 +266,11 @@ export function mountAppearance(el) {
       <button type="button" class="btn ghost block" id="resetSettings">Réinitialiser les réglages</button>
     </div>`;
 
-  const repaintWarm = mountWarmSettings(el.querySelector('#warmHost'), () => s().warm, (warm) => saveSettings({ warm }));
+  // `parts` : n'affiche que certaines cartes (sous-pages du Profil) ; sans argument, tout s'affiche comme avant.
+  if (Array.isArray(parts)) el.querySelectorAll('[data-part]').forEach((c) => { if (!parts.includes(c.dataset.part)) c.remove(); });
+
+  const warmHost = el.querySelector('#warmHost');
+  const repaintWarm = warmHost ? mountWarmSettings(warmHost, () => s().warm, (warm) => saveSettings({ warm })) : () => {};
 
   const paint = () => {
     const v = s();
@@ -274,8 +278,9 @@ export function mountAppearance(el) {
       b.setAttribute('aria-pressed', String(String(v[b.dataset.set]) === b.dataset.val));
     });
     el.querySelectorAll('[data-bool]').forEach((i) => { i.checked = !!v[i.dataset.bool]; });
-    el.querySelector('#sizeRange').value = v.size;
-    el.querySelector('#sizeVal').textContent = `${v.size} %`;
+    const range = el.querySelector('#sizeRange'), val = el.querySelector('#sizeVal');
+    if (range) range.value = v.size;
+    if (val) val.textContent = `${v.size} %`;
   };
 
   el.addEventListener('click', (e) => {
@@ -289,7 +294,7 @@ export function mountAppearance(el) {
     } else if (e.target.closest('#soundTest')) {
       playTone(s().tone);
     } else if (e.target.closest('#resetSettings')) {
-      saveSettings({ ...DEFAULTS });
+      saveSettings({ ...DEFAULTS, pseudo: s().pseudo });
       paint(); repaintWarm();
       toast('Réglages réinitialisés');
     }
@@ -299,7 +304,7 @@ export function mountAppearance(el) {
     if (i) { saveSettings({ [i.dataset.bool]: i.checked }); paint(); }
   });
   el.addEventListener('input', (e) => {
-    if (e.target.id === 'sizeRange') { saveSettings({ size: Number(e.target.value) }); el.querySelector('#sizeVal').textContent = `${s().size} %`; }
+    if (e.target.id === 'sizeRange') { saveSettings({ size: Number(e.target.value) }); const sv = el.querySelector('#sizeVal'); if (sv) sv.textContent = `${s().size} %`; }
   });
 
   paint();
