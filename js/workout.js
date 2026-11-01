@@ -6,12 +6,13 @@ import { getUser } from './auth.js';
 import { navigate } from './router.js';
 import { esc, toast, icon, dayKey, vibrate } from './ui.js';
 import { queued, QUEUED, readDoc } from './offline.js';
-import { getSettings, RESTS } from './settings.js';
+import { getSettings, RESTS, restTxt } from './settings.js';
 import { startRest, stopRest } from './timer.js';
 import { fetchHistory } from './statistics.js';
 import { loadLibrary } from './session.js';
 import { openExerciseDetail } from './detail.js';
 import { sheet } from './sharecode.js';
+import { openCycle } from './cycle.js';
 import { openCatalogPicker } from './catalog.js';
 import { buildWarm, lastWarmReps, warmCardHtml, warmClick, warmInput, warmPayload } from './warmup.js';
 
@@ -481,7 +482,33 @@ export async function workoutView(root) {
     saveDraft();
   };
 
-  return { unmount() { clearInterval(elapsedTimer); root.onclick = null; root.oninput = null; window.removeEventListener('wheel', mark); window.removeEventListener('touchmove', mark); holdOpen = -1; } };
+  /* ---------- Menu flottant « + » : toujours sous le pouce, sans remonter en haut de la page ---------- */
+  const fab = document.createElement('div');
+  fab.className = 'fab-root fab-wk';
+  const fitems = [
+    { act: 'cycle', label: 'Chrono cycle', ico: 'timer', nw: 'Chrono cycle toujours à portée' },
+    { act: 'rest', label: 'Lancer le repos', ico: 'play', nw: 'Repos sans remonter' },
+    { act: 'addex', label: 'Ajouter un exercice', ico: 'plus' }
+  ];
+  fab.innerHTML = `
+    <div class="fab-backdrop"></div>
+    <div class="fab-menu">${fitems.map((it, n) => `<button type="button" class="fab-item" style="--i:${n}" data-fab="${it.act}"><span>${esc(it.label)}</span><em>${icon(it.ico)}</em></button>`).join('')}</div>
+    <div class="fab-row"><button type="button" class="fab-btn" aria-label="Actions rapides" aria-expanded="false">${icon('plus')}</button></div>`;
+  document.body.appendChild(fab);
+  document.body.classList.add('has-wkfab');
+  const fabBtn = fab.querySelector('.fab-btn');
+  const closeFab = () => { fab.classList.remove('open'); fabBtn.setAttribute('aria-expanded', 'false'); };
+  fabBtn.addEventListener('click', () => { const o = fab.classList.toggle('open'); fabBtn.setAttribute('aria-expanded', String(o)); });
+  fab.querySelector('.fab-backdrop').addEventListener('click', closeFab);
+  fab.addEventListener('click', (ev) => {
+    const b = ev.target.closest('[data-fab]'); if (!b) return;
+    closeFab(); vibrate(10);
+    if (b.dataset.fab === 'cycle') openCycle();
+    else if (b.dataset.fab === 'rest') { startRest(state.restSeconds, 'Repos'); toast(`Repos lancé · ${restTxt(state.restSeconds)}`); }
+    else if (b.dataset.fab === 'addex') addExerciseFlow();
+  });
+
+  return { unmount() { fab.remove(); document.body.classList.remove('has-wkfab'); clearInterval(elapsedTimer); root.onclick = null; root.oninput = null; window.removeEventListener('wheel', mark); window.removeEventListener('touchmove', mark); holdOpen = -1; } };
 }
 
 export function discard() {

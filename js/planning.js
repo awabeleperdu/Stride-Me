@@ -10,7 +10,7 @@ import { esc, toast, icon, dayKey } from './ui.js';
 import { enableDnd } from './dnd.js';
 import { enableSwipe } from './swipe.js';
 import { zonesOfNames, zoneLabel, openZoneBuilder } from './zones.js';
-import { shareSession, openShareSheet, openImportSheet, toCycleSession } from './sharecode.js';
+import { shareSession, openShareSheet, openImportSheet, toCycleSession, sheet } from './sharecode.js';
 import { loadCatalog, openCatalogPicker, matchByName, ALIASES } from './catalog.js';
 
 const SUGGESTIONS = [
@@ -42,6 +42,7 @@ export async function planningView(root) {
   const lib = await loadLibrary();
   const cat = await loadCatalog().catch(() => []);
   let editing = null; // { id|null, name, exercises:[] }
+  let ownOpen = false;
   let cal = null;
 
   const allNames = () => [...new Set([...lib, ...SUGGESTIONS, ...cat.map((e) => e.n)])].sort((a, b) => a.localeCompare(b));
@@ -49,33 +50,29 @@ export async function planningView(root) {
   /* ---------- Vue principale : calendrier ou liste des séances ---------- */
   const sessionsHTML = () => `
     <div class="card stack">
-      <div>
-        <h3>Mes séances</h3>
-        <p class="muted">L'ordre de cette liste est ton roulement : après la dernière, on reprend la première.</p>
+      <div class="row between">
+        <div>
+          <h3>Mes séances</h3>
+          <p class="muted">L'ordre de cette liste est ton roulement.</p>
+        </div>
+        <button class="btn ghost sm" data-act="menu" aria-label="Plus d'actions">⋯</button>
       </div>
       <div class="sortlist" id="cycleList">
       ${rot.cycle.map((s, i) => `
         <div class="sw plan-item" data-i="${i}">
           <div class="sw-bg"><span class="sw-l">Archiver</span><span class="sw-r">Supprimer</span></div>
-          <div class="sw-fg">
-            <div class="row between">
+          <div class="sw-fg row">
+            <div class="plan-main" data-act="edit" role="button" tabindex="0" aria-label="Modifier « ${esc(s.name)} »" >
               <h3 class="plan-name"><i class="dot-c" style="--c:${sessionColor(s.id)}"></i>${i + 1}. ${esc(s.name)}</h3>
-              <div class="row" style="gap:6px">
-                <button class="btn ghost sm" data-act="share" aria-label="Partager « ${esc(s.name)} »">Partager</button>
-                <button class="btn ghost sm" data-act="edit">Modifier</button>
-                <button class="grip" data-grip aria-label="Réordonner « ${esc(s.name)} » (maintiens et glisse, ou flèches haut/bas)">${GRIP}</button>
-              </div>
+              <div class="z-tags">${zonesOfNames(s.exercises, cat).slice(0, 4).map(([z]) => `<span class="z-tag">${esc(zoneLabel(z))}</span>`).join('')}</div>
+              <p class="muted">${s.exercises.length ? s.exercises.map(esc).join(' · ') : 'Aucun exercice'}</p>
             </div>
-            <div class="z-tags">${zonesOfNames(s.exercises, cat).slice(0, 4).map(([z]) => `<span class="z-tag">${esc(zoneLabel(z))}</span>`).join('')}</div>
-            <p class="muted">${s.exercises.length ? s.exercises.map(esc).join(' · ') : 'Aucun exercice'}</p>
+            <button class="grip" data-grip aria-label="Réordonner « ${esc(s.name)} » (maintiens et glisse, ou flèches haut/bas)">${GRIP}</button>
           </div>
         </div>`).join('')}
       </div>
-      <p class="muted hint-line">Maintiens une séance et glisse pour changer l'ordre · balaie ← pour supprimer, → pour archiver.</p>
+      ${rot.cycle.length ? '<p class="muted hint-line">Touche une séance pour la modifier · maintiens la poignée pour changer l\'ordre · balaie ← pour supprimer, → pour archiver.</p>' : '<p class="muted">Aucune séance pour l\'instant. Crée-en une ou importe un code (menu ⋯).</p>'}
       <button class="btn block" data-act="new">${icon('plus')} Nouvelle séance</button>
-      ${rot.cycle.length ? '<button class="btn ghost block danger-t" data-act="delall">Tout supprimer</button>' : '<p class="muted">Aucune séance pour l\'instant. Crée-en une ou importe un code.</p>'}
-      <button class="btn ghost block" data-act="zones">Créer par zones musculaires</button>
-      <button class="btn ghost block" data-act="import">Code de séance · importer</button>
       ${(rot.archived || []).length ? `
         <details class="archived"><summary>Archivées (${rot.archived.length})</summary>
           ${rot.archived.map((s, i) => `<div class="row between arch-row" data-a="${i}"><span>${esc(s.name)}<small class="muted"> · ${s.exercises.length} exercices</small></span><button class="btn ghost sm" data-act="restore">Restaurer</button></div>`).join('')}
@@ -109,17 +106,19 @@ export async function planningView(root) {
               </div>
             </div>
           </div>`).join('')}</div>` : '<p class="muted">Ajoute ton premier exercice ci-dessous.</p>'}
-        <div class="row">
-          <input class="input" id="newEx" list="exlib" placeholder="Choisis ou écris un exercice" maxlength="60" autocomplete="off">
-          <button class="btn" data-act="exadd">${icon('plus')}</button>
-        </div>
-        <button class="btn ghost block" data-act="catalog">${icon('dumbbell')} Parcourir le catalogue (${cat.length} exercices)</button>
-        <datalist id="exlib">${allNames().map((n) => `<option value="${esc(n)}">`).join('')}</datalist>
-        <p class="muted">Les nouveaux exercices sont ajoutés à ta bibliothèque (onglet Exercices).</p>
+        <button class="btn block" data-act="catalog">${icon('plus')} Ajouter un exercice</button>
+        <details class="own-ex"${ownOpen ? ' open' : ''}>
+          <summary>Écrire un exercice à la main</summary>
+          <div class="row" style="margin-top:8px">
+            <input class="input" id="newEx" list="exlib" placeholder="Nom de l'exercice" maxlength="60" autocomplete="off">
+            <button class="btn" data-act="exadd" aria-label="Ajouter">${icon('plus')}</button>
+          </div>
+          <datalist id="exlib">${allNames().map((n) => `<option value="${esc(n)}">`).join('')}</datalist>
+        </details>
       </div>
       <button class="btn block" data-act="save">Enregistrer la séance</button>
       <button class="btn ghost block" data-act="cancel">Annuler</button>
-      ${editing.id ? `<div class="grid-2"><button class="btn ghost block" data-act="archive">Archiver</button><button class="btn ghost block danger-t" data-act="del">Supprimer</button></div>` : ''}
+      ${editing.id ? `<button class="btn ghost block" data-act="share">Partager cette séance (code)</button><div class="grid-2"><button class="btn ghost block" data-act="archive">Archiver</button><button class="btn ghost block danger-t" data-act="del">Supprimer</button></div>` : ''}
     </div>`;
 
   const draw = () => {
@@ -156,7 +155,7 @@ export async function planningView(root) {
     const v = input.value.trim();
     if (!v) return;
     if (!editing.exercises.includes(v)) editing.exercises.push(v);
-    draw();
+    ownOpen = true; draw();
     root.querySelector('#newEx')?.focus();
   };
 
@@ -217,8 +216,20 @@ export async function planningView(root) {
     const i = Number(btn.closest('[data-i]')?.dataset.i);
     const x = Number(btn.closest('[data-ex]')?.dataset.ex);
 
-    if (act === 'share') {
-      const s = rot.cycle[i];
+    if (act === 'menu') {
+      const sh = sheet('Actions', `
+        <button type="button" class="btn ghost block" data-m="zones">Créer par zones musculaires</button>
+        <button type="button" class="btn ghost block" data-m="import">Code de séance · importer</button>
+        ${rot.cycle.length ? '<button type="button" class="btn ghost block danger-t" data-m="delall">Tout supprimer</button>' : ''}`);
+      sh.el.addEventListener('click', (ev) => {
+        const m = ev.target.closest('[data-m]')?.dataset.m; if (!m) return;
+        sh.close();
+        root.querySelector(`#menuProxy`)?.remove();
+        const proxy = document.createElement('button'); proxy.id = 'menuProxy'; proxy.dataset.act = m; proxy.hidden = true; root.appendChild(proxy); proxy.click();
+      });
+    } else if (act === 'share') {
+      const s = editing ? rot.cycle.find((c) => c.id === editing.id) : rot.cycle[i];
+      if (!s) return;
       try {
         const code = await shareSession(s);
         if (s.shareCode !== code) { s.shareCode = code; await persist(); }
@@ -241,7 +252,7 @@ export async function planningView(root) {
       });
     } else if (act === 'edit') {
       const s = rot.cycle[i];
-      editing = { id: s.id, name: s.name, exercises: [...s.exercises] };
+      ownOpen = false; editing = { id: s.id, name: s.name, exercises: [...s.exercises] };
       draw();
     } else if (act === 'new') {
       editing = { id: null, name: '', exercises: [] };
@@ -301,6 +312,7 @@ export async function planningView(root) {
       return;
     }
     if (e.key === 'Enter' && e.target.id === 'newEx') { e.preventDefault(); addExercise(); }
+    if ((e.key === 'Enter' || e.key === ' ') && e.target.classList?.contains('plan-main')) { e.preventDefault(); e.target.click(); }
   };
 
   return { unmount() { cal?.destroy(); dnd.destroy(); swipe.destroy(); root.onclick = root.oninput = root.onkeydown = null; } };

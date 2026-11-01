@@ -41,10 +41,19 @@ export const ACCENTS = [
 ];
 
 export const RESTS = [60, 90, 120, 180];
+export const restTxt = (r) => (r < 120 ? `${r} s` : r % 60 ? `${Math.floor(r / 60)} min ${r % 60} s` : `${r / 60} min`);
+export const GOALS = [
+  { id: '', label: 'Non précisé' }, { id: 'mass', label: 'Prise de masse' }, { id: 'cut', label: 'Sèche' },
+  { id: 'strength', label: 'Force' }, { id: 'fit', label: 'Forme générale' }
+];
+export const LEVELS = [
+  { id: '', label: 'Non précisé' }, { id: 'beg', label: 'Débutant' }, { id: 'mid', label: 'Intermédiaire' }, { id: 'adv', label: 'Avancé' }
+];
 
 export const DEFAULTS = {
   theme: 'aurora', font: 'default', size: 100, spacing: 'normal',
   pseudo: '', accent: '', contrast: false, motion: false, splash: true, sound: true, tone: 'beep', rest: 90, autoRest: true, vibrate: true, warm: WARM_DEFAULT,
+  goal: '', level: '', week: 3, weekStart: 'mon', unit: 'kg', height: 0, target: 0, birth: 0, avatar: '', since: 0,
   at: 0                       // date de dernière modification (sert à départager local et compte)
 };
 
@@ -68,8 +77,18 @@ function sanitize(o = {}) {
   if (['beep', 'bell', 'gong'].includes(o.tone)) s.tone = o.tone;
   s.vibrate = o.vibrate !== false;
   s.autoRest = o.autoRest !== false;
-  if (RESTS.includes(Number(o.rest))) s.rest = Number(o.rest);
+  const rs = Math.round(Number(o.rest)); if (rs >= 15 && rs <= 600) s.rest = rs;      // durée libre : 15 s à 10 min
+  if (o.weekStart === 'sun') s.weekStart = 'sun';
+  if (o.unit === 'lb') s.unit = 'lb';
   s.warm = sanitizeWarm(o.warm);
+  if (has(GOALS, o.goal)) s.goal = o.goal;
+  if (has(LEVELS, o.level)) s.level = o.level;
+  const wk = Math.round(Number(o.week)); if (wk >= 1 && wk <= 7) s.week = wk;
+  const ht = Number(o.height); s.height = ht >= 100 && ht <= 250 ? Math.round(ht) : 0;
+  const tg = Number(o.target); s.target = tg >= 25 && tg <= 350 ? Math.round(tg * 10) / 10 : 0;
+  const by = Math.round(Number(o.birth)); s.birth = by >= 1930 && by <= new Date().getFullYear() - 10 ? by : 0;
+  s.avatar = typeof o.avatar === 'string' && /^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(o.avatar) && o.avatar.length < 40000 ? o.avatar : '';
+  const sn = Number(o.since); s.since = Number.isFinite(sn) && sn > 0 ? sn : 0;
   const at = Number(o.at);
   s.at = Number.isFinite(at) && at > 0 ? at : 0;
   return s;
@@ -244,6 +263,20 @@ export function mountAppearance(el, parts) {
           ${RESTS.map((r) => `<button type="button" data-set="rest" data-val="${r}" aria-pressed="false">${r >= 120 ? `${r / 60} min` : `${r} s`}</button>`).join('')}
         </div>
       </div>
+      <div class="field">
+        <span class="row between"><span>Autre durée de repos</span><b id="restCustom"></b></span>
+        <div class="rest-step">
+          <button type="button" class="btn ghost" data-rest-step="-15" aria-label="Moins 15 secondes">− 15 s</button>
+          <button type="button" class="btn ghost" data-rest-step="15" aria-label="Plus 15 secondes">+ 15 s</button>
+        </div>
+      </div>
+      <div class="field">
+        <span>La semaine commence le<small class="muted" style="display:block">Sert au compteur « cette semaine » du profil</small></span>
+        <div class="seg" role="group" aria-label="Début de semaine">
+          <button type="button" data-set="weekStart" data-val="mon" aria-pressed="false">Lundi</button>
+          <button type="button" data-set="weekStart" data-val="sun" aria-pressed="false">Dimanche</button>
+        </div>
+      </div>
       <label class="switch-row">
         <span>Lancer le repos automatiquement<small>Le minuteur démarre quand tu valides une série. Désactivé : tu le lances toi-même avec « Lancer le repos maintenant »</small></span>
         <span class="switch"><input type="checkbox" data-bool="autoRest"><i></i></span>
@@ -279,6 +312,7 @@ export function mountAppearance(el, parts) {
     });
     el.querySelectorAll('[data-bool]').forEach((i) => { i.checked = !!v[i.dataset.bool]; });
     const range = el.querySelector('#sizeRange'), val = el.querySelector('#sizeVal');
+    const rc = el.querySelector('#restCustom'); if (rc) rc.textContent = restTxt(v.rest);
     if (range) range.value = v.size;
     if (val) val.textContent = `${v.size} %`;
   };
@@ -291,6 +325,9 @@ export function mountAppearance(el, parts) {
       saveSettings({ [k]: val });
       paint();
       if (k === 'tone') playTone(val);
+    } else if (e.target.closest('[data-rest-step]')) {
+      const n = Math.min(600, Math.max(15, s().rest + Number(e.target.closest('[data-rest-step]').dataset.restStep)));
+      saveSettings({ rest: n }); paint();
     } else if (e.target.closest('#soundTest')) {
       playTone(s().tone);
     } else if (e.target.closest('#resetSettings')) {

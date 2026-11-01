@@ -68,7 +68,7 @@ const METRICS = [
   { id: 'rm', label: '1RM estimé', unit: 'kg' },
   { id: 'reps', label: 'Répétitions', unit: 'reps' }
 ];
-let pickedEx = '', metric = 'max';
+let pickedEx = '', metric = 'max', shownN = 8, exQ = '';
 
 let statsTab = 'ex';
 export async function statsView(root) {
@@ -108,6 +108,8 @@ async function progressView(root) {
   if (!names.includes(pickedEx)) pickedEx = names[0] || '';
 
 
+  const records = names.map((n) => { const pr = progressOf(history, n); const best = pr.reduce((b, p) => (p.best.weight > b.w ? { w: Number(p.best.weight), reps: Number(p.best.reps) } : b), { w: 0, reps: 0 }); return { name: n, ...best }; }).filter((r) => r.w > 0).sort((a, b) => b.w - a.w);
+
   const draw = () => {
     const prog = pickedEx ? progressOf(history, pickedEx) : [];
     const m = METRICS.find((x) => x.id === metric);
@@ -118,16 +120,28 @@ async function progressView(root) {
 
     root.innerHTML = `
       <div class="stack stats">
-        <div class="kpis">
-          <div class="card kpi"><span>Séances</span><b>${history.length}</b><small>${thisMonth} ce mois-ci</small></div>
-          <div class="card kpi"><span>Séries 30 j</span><b>${sets30}</b><small>validées</small></div>
-          <div class="card kpi"><span>Exercices suivis</span><b>${names.length}</b><small>avec charge</small></div>
+        <p class="kpi-line"><b>${history.length}</b> séances · <b>${thisMonth}</b> ce mois · <b>${sets30}</b> séries sur 30 j · <b>${names.length}</b> exercices suivis</p>
+
+        <div class="card stack">
+          <h3>Dernières séances</h3>
+          ${history.slice(0, shownN).map((w) => `
+            <details class="hist"><summary><span>${fmtD(w.date)} · ${esc(w.sessionName)}</span><span class="muted">${w.exercises.reduce((t, e) => t + e.sets.length, 0)} séries</span></summary>
+              <ul>${w.exercises.map((e) => `<li><b>${esc(e.name)}</b> <span class="muted">${e.sets.map((s) => `${s.weight}×${s.reps}`).join(' · ')}</span></li>`).join('')}</ul>
+            </details>`).join('')}
+          ${history.length > shownN ? `<button type="button" class="btn ghost block" data-more="1">Voir plus · ${history.length - shownN} restantes</button>` : ''}
+        </div>
+
+        <div class="card stack">
+          <h3>Mes records</h3>
+          ${records.slice(0, 5).map((r) => `<div class="row between rec-row"><span>${esc(r.name)}</span><b>${n0(r.w)} kg <span class="muted">× ${r.reps}</span></b></div>`).join('')}
+          ${records.length > 5 ? `<details class="archived"><summary>Voir les ${records.length - 5} autres</summary>${records.slice(5).map((r) => `<div class="row between rec-row"><span>${esc(r.name)}</span><b>${n0(r.w)} kg <span class="muted">× ${r.reps}</span></b></div>`).join('')}</details>` : ''}
         </div>
 
         <div class="card stack">
           <div class="row between"><h3>Ma progression</h3>${delta !== null ? `<span class="delta ${delta >= 0 ? 'up' : 'down'}">${delta >= 0 ? '▲' : '▼'} ${Math.abs(delta).toFixed(1).replace('.', ',')} %</span>` : ''}</div>
           ${names.length ? `
-            <div class="ex-chips" role="group" aria-label="Exercice">${names.map((n) => `<button type="button" class="chip${n === pickedEx ? ' on' : ''}" data-ex="${esc(n)}">${esc(n)}</button>`).join('')}</div>
+            ${names.length > 6 ? `<div><input class="input" type="search" id="exSearch" placeholder="Chercher un exercice" value="${esc(exQ)}" autocomplete="off"></div>` : ''}
+            <div class="ex-chips" role="group" aria-label="Exercice">${names.filter((n) => !exQ || n.toLowerCase().includes(exQ.toLowerCase()) || n === pickedEx).map((n) => `<button type="button" class="chip${n === pickedEx ? ' on' : ''}" data-ex="${esc(n)}">${esc(n)}</button>`).join('')}</div>
             <div class="seg seg3" role="group" aria-label="Mesure">${METRICS.map((x) => `<button type="button" data-m="${x.id}" aria-pressed="${x.id === metric}">${x.label}</button>`).join('')}</div>
             ${pts.length ? `
               <div class="lc-read" id="lcRead"><b>${n0(last)} ${m.unit}</b><span>${fmtD(pts[pts.length - 1].date)}${pts.length > 1 ? ` · record ${n0(pr)} ${m.unit}` : ''}</span></div>
@@ -136,18 +150,19 @@ async function progressView(root) {
           : '<p class="muted">Enregistre des séries avec une charge pour suivre ta progression exercice par exercice.</p>'}
         </div>
 
-        <div class="card stack">
-          <h3>Séances récentes</h3>
-          ${history.slice(0, 15).map((w) => `
-            <details class="hist"><summary><span>${fmtD(w.date)} · ${esc(w.sessionName)}</span><span class="muted">${w.exercises.reduce((t, e) => t + e.sets.length, 0)} séries</span></summary>
-              <ul>${w.exercises.map((e) => `<li><b>${esc(e.name)}</b> <span class="muted">${e.sets.map((s) => `${s.weight}×${s.reps}`).join(' · ')}</span></li>`).join('')}</ul>
-            </details>`).join('')}
-        </div>
       </div>`;
   };
   draw();
 
+  root.oninput = (e) => {
+    if (e.target.id !== 'exSearch') return;
+    exQ = e.target.value;
+    const box = root.querySelector('.ex-chips'); if (!box) return;
+    const q = exQ.toLowerCase();
+    box.querySelectorAll('.chip').forEach((c) => { c.style.display = (!q || c.dataset.ex.toLowerCase().includes(q) || c.dataset.ex === pickedEx) ? '' : 'none'; });
+  };
   root.onclick = (e) => {
+    if (e.target.closest('[data-more]')) { shownN += 10; draw(); return; }
     const c = e.target.closest('[data-ex]'); if (c) { pickedEx = c.dataset.ex; draw(); return; }
     const mm = e.target.closest('[data-m]'); if (mm) { metric = mm.dataset.m; draw(); return; }
     const pt = e.target.closest('.lc-pt'); if (pt) {

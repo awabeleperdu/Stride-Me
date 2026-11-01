@@ -3,6 +3,7 @@ import { getRotation, sessionForDate, saveRotation, startWorkout, insertRestDay,
 import { loadLibrary } from './session.js';
 import { warmImages } from './offline.js';
 import { navigate } from './router.js';
+import { openCycle } from './cycle.js';
 import { esc, icon, toast, dayKey, vibrate } from './ui.js';
 import { getSettings, saveSettings } from './settings.js';
 
@@ -218,6 +219,8 @@ export async function homeView(root) {
       } else if (act === 'rest') {
         try { await insertRestDay(todayKey); toast('Jour de repos ajouté'); } catch (e) { console.error(e); toast('Erreur'); return; }
         await render();
+      } else if (act === 'cycle') {
+        openCycle();
       } else if (act === 'plan') {
         navigate('/planning');
       }
@@ -232,7 +235,7 @@ export async function homeView(root) {
     const fab = document.createElement('div');
     fab.className = 'fab-root';
     const items = [
-      { act: 'machines', label: 'Voir les exercices', ico: 'dumbbell' },
+      { act: 'cycle', label: 'Chrono cycle', ico: 'timer', nw: 'Chrono cycle' },
       sessions[0] && { act: 'rest', label: 'Repos aujourd\'hui', ico: 'timer' },
       { act: 'plan', label: 'Modifier le planning', ico: 'calendar' }
     ].filter(Boolean);
